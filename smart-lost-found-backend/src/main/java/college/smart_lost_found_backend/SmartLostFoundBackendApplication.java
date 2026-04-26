@@ -10,4 +10,5 @@ public class SmartLostFoundBackendApplication {
 		SpringApplication.run(SmartLostFoundBackendApplication.class, args);
 	}
 
+
 }
