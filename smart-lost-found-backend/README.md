@@ -1,4 +1,4 @@
-# 📦 Campus Lost & Found Management System – Backend
+# 📦Smart Campus Lost & Found Management System – Backend
 
 ## 📖 Overview
 
@@ -10,10 +10,15 @@ The **Campus Lost & Found Management System (Backend)** is a Spring Boot-based R
 
 * 🔐 User authentication & authorization (JWT-based)
 * 📦 Report lost items
+* 📍 Location-based filtering
+* 📧 Email notifications
 * 📍 Submit found items
 * 🔎 Search and filter items
 * 🔄 Update item status
 * ⚡ Lightweight data access using JDBC
+*    notifications   # 🔔 stores user alerts
+*    📸 Image upload for items
+*    
 * 🧩 Clean layered architecture (Controller → Service → DAO)
 
 ---
@@ -85,12 +90,15 @@ CREATE DATABASE lost_found_db;
 
 | Method | Endpoint           | Description        |
 | ------ | ------------------ | ------------------ |
-| POST   | /api/auth/register | Register user      |
+| POST   | /api/auth/register | Register user 
 | POST   | /api/auth/login    | Login user         |
 | POST   | /api/items/lost    | Report lost item   |
 | POST   | /api/items/found   | Report found item  |
 | GET    | /api/items         | Get all items      |
 | PUT    | /api/items/{id}    | Update item status |
+| GET    | /api/notifications | Get user notifications |
+| PUT    | /api/notification/{id}/read  | Mark notifications as read   | 
+
 
 ---
 
@@ -113,9 +121,7 @@ Use Postman or any API client to test endpoints.
 
 ## 📌 Future Improvements
 
-* 📸 Image upload for items
-* 📍 Location-based filtering
-* 📧 Email notifications
+
 * 📊 Admin dashboard
 
 ---
