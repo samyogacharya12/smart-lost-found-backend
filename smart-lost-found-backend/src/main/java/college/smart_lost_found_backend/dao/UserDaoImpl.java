@@ -19,7 +19,10 @@ public class UserDaoImpl implements UserDao {
     private final RowMapper<User> userRowMapper = (rs, rowNum) -> {
         User user = new User();
         user.setUserId(rs.getLong("user_id"));
-        user.setFullName(rs.getString("full_name"));
+        user.setFirstName(rs.getString("first_name"));
+        user.setMiddleName(rs.getString("middle_name"));
+        user.setLastName((rs.getString("last_name")));
+        user.setUsername((rs.getString("username")));
         user.setEmail(rs.getString("email"));
         user.setPassword(rs.getString("password"));
         user.setPhoneNumber(rs.getString("phone_number"));
@@ -32,13 +35,16 @@ public class UserDaoImpl implements UserDao {
     @Override
     public int save(User user) {
         String sql = """
-                INSERT INTO users (full_name, email, password, phone_number, role)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO users (username,first_name, middle_name, last_name ,email, password, phone_number, role)
+                VALUES (?, ?,?, ?, ?, ?, ?,?)
                 """;
 
         return jdbcTemplate.update(
                 sql,
-                user.getFullName(),
+                user.getUsername(),
+                user.getFirstName(),
+                user.getMiddleName(),
+                user.getLastName(),
                 user.getEmail(),
                 user.getPassword(),
                 user.getPhoneNumber(),
@@ -52,6 +58,13 @@ public class UserDaoImpl implements UserDao {
 
         List<User> users = jdbcTemplate.query(sql, userRowMapper, userId);
 
+        return users.stream().findFirst();
+    }
+
+    @Override
+    public Optional<User> findByName(String username) {
+        String sql = "SELECT * FROM users WHERE username = ?";
+        List<User> users = jdbcTemplate.query(sql, userRowMapper, username);
         return users.stream().findFirst();
     }
 
@@ -75,13 +88,16 @@ public class UserDaoImpl implements UserDao {
     public int update(User user) {
         String sql = """
                 UPDATE users
-                SET full_name = ?, phone_number = ?, role = ?
+                SET username = ?, first_name=?, middle_name=?, last_name=?, phone_number = ?, role = ?
                 WHERE user_id = ?
                 """;
 
         return jdbcTemplate.update(
                 sql,
-                user.getFullName(),
+                user.getUsername(),
+                user.getFirstName(),
+                user.getMiddleName(),
+                user.getLastName(),
                 user.getPhoneNumber(),
                 user.getRole(),
                 user.getUserId()

@@ -1,0 +1,38 @@
+package college.smart_lost_found_backend.service;
+
+import college.smart_lost_found_backend.dao.UserDao;
+import college.smart_lost_found_backend.dto.UserDto;
+import college.smart_lost_found_backend.dto.UserInfoDetails;
+import college.smart_lost_found_backend.mapper.UserMapper;
+import college.smart_lost_found_backend.model.User;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+
+import java.util.Optional;
+
+@Service
+public class UserServiceImpl implements UserService, UserDetailsService {
+
+
+     @Autowired
+     private UserDao userDao;
+
+     @Autowired
+     private UserMapper userMapper;
+
+    @Override
+    public Optional<UserDto> findByUsername(String username) {
+        return userDao.findByName(username)
+                .map(user -> userMapper.toDto(user));
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        Optional<User> userInfo = userDao.findByName(username);
+        return userInfo.map(UserInfoDetails::new)
+                .orElseThrow(() -> new UsernameNotFoundException("user not found " + username));
+    }
+}

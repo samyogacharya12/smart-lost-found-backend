@@ -8,7 +8,10 @@ import java.time.LocalDateTime;
 public class User {
 
     private Long userId;
-    private String fullName;
+    private String username;
+    private String firstName;
+    private String middleName;
+    private String lastName;
     private String email;
     private String password;
     private String phoneNumber;
