@@ -32,7 +32,7 @@ public class SecurityConfig {
         return http
                 .csrf(csrf -> csrf.disable()) // disable CSRF for APIs
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/*", "/users/save","/users/login").permitAll()
+                        .requestMatchers( "/api/users","/api/authenticate").permitAll()
                         .requestMatchers("/users/**", "/students/**").authenticated()
                 )
                 .httpBasic(Customizer.withDefaults()) // replaces .httpBasic()
