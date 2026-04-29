@@ -7,6 +7,9 @@ import college.smart_lost_found_backend.mapper.UserMapper;
 import college.smart_lost_found_backend.model.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -25,6 +28,10 @@ public class UserServiceImpl implements UserService, UserDetailsService {
      @Autowired
      private UserMapper userMapper;
 
+
+    @Autowired
+    private JwtService jwtService;
+
     @Override
     public String save(UserDto userDto) {
         log.info("UserServiceImpl save userDto ");
@@ -34,6 +41,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         }
         return "user could not be saved";
     }
+
 
     @Override
     public Optional<UserDto> findByUsername(String username) {
