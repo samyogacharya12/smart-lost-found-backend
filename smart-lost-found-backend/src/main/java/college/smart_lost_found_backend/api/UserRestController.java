@@ -22,7 +22,7 @@ public class UserRestController {
 
 
 
-    public  UserRestController(UserService userService,
+    public UserRestController(UserService userService,
                                AuthenticationService authenticationService) {
         this.userService = userService;
         this.authenticationService = authenticationService;

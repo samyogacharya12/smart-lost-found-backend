@@ -13,6 +13,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -32,9 +34,13 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Autowired
     private JwtService jwtService;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @Override
     public String save(UserDto userDto) {
         log.info("UserServiceImpl save userDto ");
+        userDto.setPassword(passwordEncoder.encode(userDto.getPassword()));
         int value=userDao.save(userMapper.toEntity(userDto));
         if(value>0){
             return "user saved successfully";

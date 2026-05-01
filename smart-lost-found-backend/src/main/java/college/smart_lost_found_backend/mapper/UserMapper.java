@@ -2,15 +2,11 @@ package college.smart_lost_found_backend.mapper;
 
 import college.smart_lost_found_backend.dto.UserDto;
 import college.smart_lost_found_backend.model.User;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UserMapper {
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
 
     // Convert Entity → DTO (basic info)
     public static UserDto toDto(User user) {
@@ -40,7 +36,7 @@ public class UserMapper {
         user.setPhoneNumber(dto.getPhoneNumber());
         user.setFirstName(dto.getFirstName());
         user.setLastName(dto.getLastName());
-        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        user.setPassword(dto.getPassword());
         return user;
     }
 }
