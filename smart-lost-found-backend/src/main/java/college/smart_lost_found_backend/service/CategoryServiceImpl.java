@@ -38,9 +38,9 @@ public class CategoryServiceImpl implements CategoryService {
         RestResponse response = new RestResponse();
         try {
             Category category = categoryMapper.toEntity(categoryDto);
-            int value= categoryDao.save(category);
+            int value = categoryDao.save(category);
             if (value > 0) {
-                response.setMessage("Category is successfully saved "+category.getCategoryId());
+                response.setMessage("Category is successfully saved " + category.getCategoryId());
                 response.setResponseStatus(ResponseStatus.SUCCESS);
                 return response;
             }
@@ -54,16 +54,17 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public Optional<CategoryDto> findById(Long categoryId) {
+    public CategoryDto findById(Long categoryId) {
         log.info("findById:{}");
         try {
             return categoryDao
                     .findById(categoryId)
-                    .map(CategoryMapper::toDto);
+                    .map(CategoryMapper::toDto)
+                    .orElse(null);
         } catch (Exception e) {
             log.error(e.getMessage());
         }
-        return Optional.empty();
+        return new CategoryDto();
     }
 
     @Override
@@ -82,14 +83,23 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public int update(CategoryDto categoryDto) {
+    public RestResponse update(CategoryDto categoryDto) {
         log.info("update categoryDto:{}");
+        RestResponse response = new RestResponse();
         try {
             Category category = categoryMapper.toEntity(categoryDto);
-            return categoryDao.update(category);
+            int update = categoryDao.update(category);
+            if (update > 0) {
+                response.setMessage("Category is successfully updated " + category.getCategoryId());
+                response.setResponseStatus(ResponseStatus.SUCCESS);
+                return response;
+            }
         } catch (Exception e) {
             log.error(e.getMessage());
         }
-        return 0;
+        return RestResponse
+                .builder()
+                .status(ResponseStatus.INTERNAL_SERVER_ERROR.getValue())
+                .build();
     }
 }

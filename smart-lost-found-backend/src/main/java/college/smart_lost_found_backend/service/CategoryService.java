@@ -10,9 +10,9 @@ public interface CategoryService {
 
     RestResponse save(CategoryDto categoryDto);
 
-    Optional<CategoryDto> findById(Long categoryId);
+    CategoryDto findById(Long categoryId);
 
     List<CategoryDto> findAll();
 
-    int update(CategoryDto categoryDto);
+    RestResponse update(CategoryDto categoryDto);
 }

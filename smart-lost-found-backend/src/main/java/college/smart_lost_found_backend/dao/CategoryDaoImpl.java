@@ -37,7 +37,7 @@ public class CategoryDaoImpl implements CategoryDao {
     @Override
     public int save(Category category) {
         log.info("save category");
-        String sql = "INSERT INTO CATEGORY (category_name,description,created_at) VALUES (?,?,?)";
+        String sql = "INSERT INTO CATEGORIES (category_name,description,created_at) VALUES (?,?,?)";
         return jdbcTemplate.update(sql,
                 category.getCategoryName(),
                 category.getDescription(),
@@ -47,7 +47,7 @@ public class CategoryDaoImpl implements CategoryDao {
     @Override
     public Optional<Category> findById(Long categoryId) {
         log.info("findById categoryId");
-        String sql = "SELECT * FROM CATEGORY WHERE category_id=?";
+        String sql = "SELECT * FROM CATEGORIES WHERE category_id=?";
         List<Category> categories = jdbcTemplate
                 .query(sql, new Object[]{categoryId}, categoryMapper);
         return categories.stream().findFirst();
@@ -56,7 +56,7 @@ public class CategoryDaoImpl implements CategoryDao {
     @Override
     public List<Category> findAll() {
         log.info("findAll for category");
-        String sql = "SELECT * FROM CATEGORY";
+        String sql = "SELECT * FROM CATEGORIES";
         return jdbcTemplate.query(sql, categoryMapper);
     }
 
@@ -64,7 +64,7 @@ public class CategoryDaoImpl implements CategoryDao {
     public int update(Category category) {
         log.info("update category");
         String sql = """
-                UPDATE category
+                UPDATE CATEGORIES
                 SET category_name=?, description=?, created_at=?
                 WHERE category_id=?    \s
                \s""";
