@@ -8,11 +8,13 @@ import college.smart_lost_found_backend.enumconstant.ClaimStatus;
 import college.smart_lost_found_backend.enumconstant.ItemStatus;
 import college.smart_lost_found_backend.mapper.ClaimMapper;
 import college.smart_lost_found_backend.model.Claim;
+import college.smart_lost_found_backend.model.Item;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -51,18 +53,20 @@ public class ClaimServiceImpl implements ClaimService {
 
             claimDao.save(claim);
 
-            notificationService.sendNotification(
+            Optional<Item> item = itemDao.findById(claimDto.getItemId());
+
+            item.ifPresent(value -> notificationService.sendNotification(
                     claim.getUserId(),
                     "Claim Submitted",
-                    "Your claim has been submitted and is waiting for admin verification."
-            );
+                    "Your claim for" + value.getTitle() +
+                            "has been submitted and is waiting for admin verification."));
 
             String email = userDao.findEmailByUserId(claim.getUserId());
-
             emailService.sendEmail(
                     email,
                     "Claim Submitted",
-                    "Your claim has been submitted and is waiting for admin verification."
+                    "Your claim has been submitted and is waiting for admin verification.",
+                    item.get().getTitle()
             );
 
             // When user claims item, item becomes CLAIMED
@@ -137,23 +141,28 @@ public class ClaimServiceImpl implements ClaimService {
         try {
             Claim claim = claimDao.findById(claimId)
                     .orElseThrow(() -> new RuntimeException("Claim not found"));
-
+            Optional<Item> item = itemDao.findById(claim.getItemId());
             claimDao.updateStatus(claimId, ClaimStatus.APPROVED);
+             if(item.isPresent()) {
+                 notificationService.sendNotification(
+                         claim.getUserId(),
+                         "Claim Approved",
+                         "Your claim for"+ item.get().getTitle()
+                                 +"has been approved after admin verification."
+                 );
 
-            notificationService.sendNotification(
-                    claim.getUserId(),
-                    "Claim Approved",
-                    "Your claim has been approved after admin verification."
-            );
 
+                 String email = userDao.findEmailByUserId(claim.getUserId());
 
-            String email = userDao.findEmailByUserId(claim.getUserId());
+                 emailService.sendEmail(
+                         email,
+                         "Claim Approved",
+                         "Your claim has been approved. The item is marked as returned.",
+                               item.get().getTitle()
 
-            emailService.sendEmail(
-                    email,
-                    "Claim Approved",
-                    "Your claim has been approved. The item is marked as returned."
-            );
+                 );
+
+             }
             // Once approved, item is returned
             itemDao.updateStatus(claim.getItemId(), ItemStatus.RETURNED);
 
@@ -171,15 +180,15 @@ public class ClaimServiceImpl implements ClaimService {
     public ClaimDto rejectClaim(Long claimId) {
         log.info("ClaimServiceImpl rejectClaim {}", claimId);
         try {
-
             claimDao.updateStatus(claimId, ClaimStatus.REJECTED);
             Claim claim = claimDao.findById(claimId)
                     .orElseThrow(() -> new RuntimeException("Claim not found"));
-            notificationService.sendNotification(
+            Optional<Item> item = itemDao.findById(claim.getItemId());
+            item.ifPresent(value -> notificationService.sendNotification(
                     claim.getUserId(),
                     "Claim Rejected",
-                    "Your claim has been rejected after admin verification."
-            );
+                    "Your claim for" + value.getTitle() + "has been rejected after admin verification."
+            ));
 
             // 4. Send EMAIL (NEW)
             String email = userDao
@@ -188,7 +197,8 @@ public class ClaimServiceImpl implements ClaimService {
             emailService.sendEmail(
                     email,
                     "Claim Rejected",
-                    "Your claim for the item has been rejected. Please contact support if needed."
+                    "Your claim for the item has been rejected. Please contact support if needed.",
+                    item.get().getTitle()
             );
             return ClaimMapper.toDto(claim);
         } catch (Exception e) {
