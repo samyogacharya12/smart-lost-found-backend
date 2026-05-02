@@ -69,6 +69,11 @@ public class UserDaoImpl implements UserDao {
     }
 
     @Override
+    public String findEmailByUserId(Long userId) {
+        String sql = "SELECT email FROM users WHERE user_id = ?";
+        return jdbcTemplate.queryForObject(sql, String.class, userId);    }
+
+    @Override
     public Optional<User> findByEmail(String email) {
         String sql = "SELECT * FROM users WHERE email = ?";
 

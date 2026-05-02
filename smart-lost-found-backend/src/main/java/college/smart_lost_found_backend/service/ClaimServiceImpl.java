@@ -2,12 +2,12 @@ package college.smart_lost_found_backend.service;
 
 import college.smart_lost_found_backend.dao.ClaimDao;
 import college.smart_lost_found_backend.dao.ItemDao;
+import college.smart_lost_found_backend.dao.UserDao;
 import college.smart_lost_found_backend.dto.ClaimDto;
 import college.smart_lost_found_backend.enumconstant.ClaimStatus;
 import college.smart_lost_found_backend.enumconstant.ItemStatus;
 import college.smart_lost_found_backend.mapper.ClaimMapper;
 import college.smart_lost_found_backend.model.Claim;
-import jdk.jfr.Threshold;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,23 +23,51 @@ public class ClaimServiceImpl implements ClaimService {
     private final ClaimDao claimDao;
     private final ItemDao itemDao;
 
-    public ClaimServiceImpl(ClaimDao claimDao, ItemDao itemDao) {
+    private final EmailService emailService;
+
+    private final UserDao userDao;
+
+    private final NotificationService notificationService;
+
+    public ClaimServiceImpl(ClaimDao claimDao,
+                            ItemDao itemDao,
+                            EmailService emailService,
+                            UserDao userDao,
+                            NotificationService notificationService) {
         this.claimDao = claimDao;
         this.itemDao = itemDao;
+        this.emailService = emailService;
+        this.userDao = userDao;
+        this.notificationService = notificationService;
     }
 
 
     @Override
     public ClaimDto save(ClaimDto claimDto) {
         log.info("ClaimServiceImpl save claimDto {}", claimDto);
-        try{
+        try {
             Claim claim = ClaimMapper.toEntity(claimDto);
             claim.setStatus(ClaimStatus.PENDING);
 
             claimDao.save(claim);
 
+            notificationService.sendNotification(
+                    claim.getUserId(),
+                    "Claim Submitted",
+                    "Your claim has been submitted and is waiting for admin verification."
+            );
+
+            String email = userDao.findEmailByUserId(claim.getUserId());
+
+            emailService.sendEmail(
+                    email,
+                    "Claim Submitted",
+                    "Your claim has been submitted and is waiting for admin verification."
+            );
+
             // When user claims item, item becomes CLAIMED
-            itemDao.updateStatus(claim.getItemId(), ItemStatus.CLAIMED.toString());
+            itemDao.updateStatus(claim.getItemId(),
+                    ItemStatus.CLAIMED);
 
             return ClaimMapper.toDto(claim);
         } catch (Exception e) {
@@ -78,20 +106,20 @@ public class ClaimServiceImpl implements ClaimService {
     @Override
     public List<ClaimDto> findByItemId(Long itemId) {
         log.info("ClaimServiceImpl findByItemId {}", itemId);
-        try{
+        try {
             return claimDao.findByItemId(itemId)
                     .stream()
                     .map(ClaimMapper::toDto)
                     .toList();
         } catch (Exception e) {
-                log.error("ClaimServiceImpl findByItemId {}", itemId, e);
+            log.error("ClaimServiceImpl findByItemId {}", itemId, e);
         }
         return List.of();
     }
 
     @Override
     public List<ClaimDto> findByUserId(Long userId) {
-        try{
+        try {
             return claimDao.findByUserId(userId)
                     .stream()
                     .map(ClaimMapper::toDto)
@@ -112,11 +140,23 @@ public class ClaimServiceImpl implements ClaimService {
 
             claimDao.updateStatus(claimId, ClaimStatus.APPROVED);
 
-            // Reject other pending claims for the same item
-            claimDao.rejectOtherClaims(claim.getItemId(), claimId);
+            notificationService.sendNotification(
+                    claim.getUserId(),
+                    "Claim Approved",
+                    "Your claim has been approved after admin verification."
+            );
 
+
+            String email = userDao.findEmailByUserId(claim.getUserId());
+
+            emailService.sendEmail(
+                    email,
+                    "Claim Approved",
+                    "Your claim has been approved. The item is marked as returned."
+            );
             // Once approved, item is returned
-            itemDao.updateStatus(claim.getItemId(), "RETURNED");
+            itemDao.updateStatus(claim.getItemId(), ItemStatus.RETURNED);
+
             claim = claimDao.findById(claimId)
                     .orElseThrow(() -> new RuntimeException("Claim not found"));
             return ClaimMapper.toDto(claim);
@@ -129,25 +169,41 @@ public class ClaimServiceImpl implements ClaimService {
     @Override
     @Transactional
     public ClaimDto rejectClaim(Long claimId) {
-          log.info("ClaimServiceImpl rejectClaim {}", claimId);
-          try {
+        log.info("ClaimServiceImpl rejectClaim {}", claimId);
+        try {
+
             claimDao.updateStatus(claimId, ClaimStatus.REJECTED);
-             Claim claim = claimDao.findById(claimId)
-                      .orElseThrow(() -> new RuntimeException("Claim not found"));
-              return ClaimMapper.toDto(claim);
-          } catch (Exception e) {
-              log.error("ClaimServiceImpl rejectClaim {}", claimId, e);
-          }
-          return null;
+            Claim claim = claimDao.findById(claimId)
+                    .orElseThrow(() -> new RuntimeException("Claim not found"));
+            notificationService.sendNotification(
+                    claim.getUserId(),
+                    "Claim Rejected",
+                    "Your claim has been rejected after admin verification."
+            );
+
+            // 4. Send EMAIL (NEW)
+            String email = userDao
+                    .findEmailByUserId(claim.getUserId());
+
+            emailService.sendEmail(
+                    email,
+                    "Claim Rejected",
+                    "Your claim for the item has been rejected. Please contact support if needed."
+            );
+            return ClaimMapper.toDto(claim);
+        } catch (Exception e) {
+            log.error("ClaimServiceImpl rejectClaim {}", claimId, e);
+        }
+        return null;
     }
 
     @Override
     public void deleteById(Long claimId) {
-      log.info("ClaimServiceImpl deleteById {}", claimId);
-      try {
+        log.info("ClaimServiceImpl deleteById {}", claimId);
+        try {
             claimDao.deleteById(claimId);
-      }catch (Exception e) {
-          log.error("ClaimServiceImpl deleteById {}", claimId, e);
-      }
+        } catch (Exception e) {
+            log.error("ClaimServiceImpl deleteById {}", claimId, e);
+        }
     }
 }

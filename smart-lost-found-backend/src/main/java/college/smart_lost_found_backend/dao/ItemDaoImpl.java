@@ -103,10 +103,10 @@ public class ItemDaoImpl implements ItemDao {
     }
 
     @Override
-    public int updateStatus(Long itemId, String status) {
+    public int updateStatus(Long itemId, ItemStatus status) {
         String sql = "UPDATE items SET status = ? WHERE item_id = ?";
 
-        return jdbcTemplate.update(sql, status, itemId);
+        return jdbcTemplate.update(sql, status.toString(), itemId);
     }
 
     @Override

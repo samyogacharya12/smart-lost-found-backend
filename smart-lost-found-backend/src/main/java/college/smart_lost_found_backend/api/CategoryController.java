@@ -3,7 +3,6 @@ package college.smart_lost_found_backend.api;
 import college.smart_lost_found_backend.dto.CategoryDto;
 import college.smart_lost_found_backend.dto.RestResponse;
 import college.smart_lost_found_backend.service.CategoryService;
-import college.smart_lost_found_backend.util.ResponseUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

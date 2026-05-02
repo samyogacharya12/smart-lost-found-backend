@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequestMapping("/api/claims")
 @Slf4j
 public class ClaimController {
 
@@ -34,7 +35,7 @@ public class ClaimController {
         return ResponseEntity.ok(claimService.findById(claimId));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping
     public ResponseEntity<List<ClaimDto>> findAll() {
         return ResponseEntity.ok(claimService.findAll());
@@ -50,7 +51,7 @@ public class ClaimController {
         return ResponseEntity.ok(claimService.findByUserId(userId));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @PatchMapping("/{claimId}/approve")
     public ResponseEntity<RestResponse> approveClaim(@PathVariable Long claimId) {
          claimService.approveClaim(claimId);
@@ -59,7 +60,7 @@ public class ClaimController {
         return ResponseEntity.ok(restResponse);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @PatchMapping("/{claimId}/reject")
     public ResponseEntity<RestResponse> rejectClaim(@PathVariable Long claimId) {
         claimService.rejectClaim(claimId);

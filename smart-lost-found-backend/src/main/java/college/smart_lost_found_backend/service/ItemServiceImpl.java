@@ -123,7 +123,8 @@ public class ItemServiceImpl implements ItemService {
             itemDao.findById(itemId)
                     .orElseThrow(() -> new RuntimeException("Item not found"));
 
-            int response = itemDao.updateStatus(itemId, status);
+            int response = itemDao.updateStatus(itemId,
+                    ItemStatus.valueOf(status));
             if (response == 1) {
                 Optional<Item> item = itemDao.findById(itemId);
                 if (item.isPresent()) {

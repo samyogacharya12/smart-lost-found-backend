@@ -1,5 +1,6 @@
 package college.smart_lost_found_backend.dao;
 
+import college.smart_lost_found_backend.enumconstant.ItemStatus;
 import college.smart_lost_found_backend.model.Item;
 
 import java.util.List;
@@ -19,7 +20,7 @@ public interface ItemDao {
 
     int update(Item item);
 
-    int updateStatus(Long itemId, String status);
+    int updateStatus(Long itemId, ItemStatus status);
 
     int deleteById(Long itemId);
 }
