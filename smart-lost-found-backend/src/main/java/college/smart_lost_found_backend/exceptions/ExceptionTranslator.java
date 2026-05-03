@@ -60,4 +60,10 @@ public class ExceptionTranslator {
         return new ResponseEntity<>(ResponseUtil.getInternalServerErrorResponse(ErrorConstants.DEFAULT_INTERNAL_SERVER_ERROR_MESSAGE), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+
+    @ExceptionHandler(Invalid.class)
+    public ResponseEntity<RestResponse> invalid(Invalid ex) {
+        return new ResponseEntity<>(ResponseUtil.getBadRequestResponse(ex.getMessage(), ex.getDetail()), HttpStatus.BAD_REQUEST);
+    }
+
 }

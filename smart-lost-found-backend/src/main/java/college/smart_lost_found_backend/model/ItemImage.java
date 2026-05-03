@@ -9,6 +9,7 @@ public class ItemImage {
 
     private Long id;
     private Long itemId;
-    private String imageUrl;
+    private String fileType;
+    private String path;
     private LocalDateTime uploadedAt;
 }

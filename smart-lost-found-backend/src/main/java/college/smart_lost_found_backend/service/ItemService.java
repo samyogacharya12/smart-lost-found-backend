@@ -1,6 +1,7 @@
 package college.smart_lost_found_backend.service;
 
 import college.smart_lost_found_backend.dto.ItemDto;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -21,4 +22,5 @@ public interface ItemService {
     ItemDto updateStatus(Long itemId, String status);
 
     void deleteById(Long itemId);
+
 }

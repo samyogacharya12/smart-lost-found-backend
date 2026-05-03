@@ -1,9 +1,11 @@
 package college.smart_lost_found_backend.multipartfile;
 
+import college.smart_lost_found_backend.dto.ItemDto;
 import college.smart_lost_found_backend.dto.ItemImageDto;
 import college.smart_lost_found_backend.service.ItemImageService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -12,8 +14,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
-@RestController
-@RequestMapping("/api/items")
+@Controller
+@RequestMapping("/file")
 public class ItemImageController {
 
 
@@ -37,6 +39,15 @@ public class ItemImageController {
         return ResponseEntity.ok(itemImageService.getImagesByItemId(itemId));
     }
 
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ItemDto> saveItemWithImage(
+             ItemDto itemDto,
+            @RequestPart(value = "file", required = false) MultipartFile file
+    ) {
+        return ResponseEntity.ok(itemImageService.saveItemWithImage(itemDto, file));
+    }
+
+
     @DeleteMapping("/images/{imageId}")
     public ResponseEntity<String> deleteImage(@PathVariable Long imageId) {
         itemImageService.deleteImage(imageId);
@@ -44,12 +55,11 @@ public class ItemImageController {
     }
 
 
-    @GetMapping("/images/download")
-    public ResponseEntity<byte[]> getImage(@RequestParam String path) {
+    @PostMapping("/images/download")
+    public ResponseEntity<byte[]> getImage(@RequestBody ItemImageDto itemImageDto) {
         try {
-            Path filePath = Paths.get(path);
-
-            byte[] imageBytes = Files.readAllBytes(filePath);
+            byte[] imageBytes = itemImageService.downloadImage(itemImageDto
+                    .getItemId(), itemImageDto.getId());
 
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_OCTET_STREAM)

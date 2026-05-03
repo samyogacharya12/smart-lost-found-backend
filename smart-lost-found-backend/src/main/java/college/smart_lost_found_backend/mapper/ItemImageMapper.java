@@ -13,7 +13,7 @@ public class ItemImageMapper {
         ItemImageDto dto = new ItemImageDto();
         dto.setId(image.getId());
         dto.setItemId(image.getItemId());
-        dto.setImageUrl(image.getImageUrl());
+        dto.setPath(image.getPath());
         return dto;
     }
 

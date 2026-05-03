@@ -6,6 +6,7 @@ import college.smart_lost_found_backend.dao.UserDao;
 import college.smart_lost_found_backend.dto.ClaimDto;
 import college.smart_lost_found_backend.enumconstant.ClaimStatus;
 import college.smart_lost_found_backend.enumconstant.ItemStatus;
+import college.smart_lost_found_backend.exceptions.Invalid;
 import college.smart_lost_found_backend.mapper.ClaimMapper;
 import college.smart_lost_found_backend.model.Claim;
 import college.smart_lost_found_backend.model.Item;
@@ -47,13 +48,16 @@ public class ClaimServiceImpl implements ClaimService {
     @Override
     public ClaimDto save(ClaimDto claimDto) {
         log.info("ClaimServiceImpl save claimDto {}", claimDto);
+        Optional<Item> item = itemDao.findById(claimDto.getItemId());
+        if (item.isEmpty()) {
+          throw new Invalid("Item not found", claimDto);
+        }
         try {
             Claim claim = ClaimMapper.toEntity(claimDto);
             claim.setStatus(ClaimStatus.PENDING);
 
             claimDao.save(claim);
 
-            Optional<Item> item = itemDao.findById(claimDto.getItemId());
 
             item.ifPresent(value -> notificationService.sendNotification(
                     claim.getUserId(),
