@@ -18,7 +18,8 @@ public class UserMapper {
                 user.getUserId(),
                 user.getUsername(),
                 user.getEmail(),
-                user.getRole()
+                user.getRole(),
+                user.getEmailVerified()
         );
     }
 

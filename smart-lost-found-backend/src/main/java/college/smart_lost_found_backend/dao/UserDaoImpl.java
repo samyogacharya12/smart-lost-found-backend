@@ -28,6 +28,7 @@ public class UserDaoImpl implements UserDao {
         user.setRole(rs.getString("role"));
         user.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
         user.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
+        user.setEmailVerified(rs.getBoolean("email_verified"));
         return user;
     };
 

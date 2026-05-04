@@ -5,6 +5,7 @@ import college.smart_lost_found_backend.service.UserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -43,6 +44,7 @@ public class SecurityConfig {
         return http
                 .csrf(csrf -> csrf.disable()) // disable CSRF for APIs
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers( "/api/users","/api/authenticate", "/api/verify").permitAll()
                         .anyRequest().authenticated()
                 )
