@@ -51,6 +51,38 @@ public class EmailServiceImpl implements EmailService {
     }
 
     @Override
+    public void sendHtmlEmail(String to, String subject, String title, String body) {
+        try {
+            MimeMessage message = javaMailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(to);
+            helper.setSubject(subject);
+
+            String html = """
+                <html>
+                <body style="font-family: Arial; background:#f4f6f8; padding:20px;">
+                  <div style="max-width:600px; margin:auto; background:white; padding:20px; border-radius:8px;">
+                    <h2 style="color:#2c3e50;">%s</h2>
+                    <p>%s</p>
+                    <hr>
+                    <p style="font-size:12px; color:gray;">
+                      Smart Lost & Found System
+                    </p>
+                  </div>
+                </body>
+                </html>
+                """.formatted(title, body);
+
+            helper.setText(html, true);
+            javaMailSender.send(message);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to send email: " + e.getMessage());
+        }
+    }
+
+    @Override
     public void sendEmail(String to, String subject, String body, String itemName) {
         log.info("Sending email to " + to);
         try {

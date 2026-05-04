@@ -3,12 +3,11 @@ package college.smart_lost_found_backend.dao;
 import college.smart_lost_found_backend.model.User;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.stereotype.Service;
-
+import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
-@Service
+@Repository
 public class UserDaoImpl implements UserDao {
     private final JdbcTemplate jdbcTemplate;
 
@@ -35,8 +34,8 @@ public class UserDaoImpl implements UserDao {
     @Override
     public int save(User user) {
         String sql = """
-                INSERT INTO users (username,first_name, middle_name, last_name ,email, password, phone_number, role)
-                VALUES (?, ?,?, ?, ?, ?, ?,?)
+                INSERT INTO users (username,first_name, middle_name, last_name ,email, password, phone_number, role, email_verified, verification_token)
+                VALUES (?, ?,?, ?, ?, ?, ?,?,?,?)
                 """;
 
         return jdbcTemplate.update(
@@ -48,7 +47,9 @@ public class UserDaoImpl implements UserDao {
                 user.getEmail(),
                 user.getPassword(),
                 user.getPhoneNumber(),
-                user.getRole()
+                user.getRole(),
+                user.getEmailVerified(),
+                user.getVerificationToken()
         );
     }
 
@@ -112,6 +113,25 @@ public class UserDaoImpl implements UserDao {
     @Override
     public int deleteById(Long userId) {
         String sql = "DELETE FROM users WHERE user_id = ?";
+
+        return jdbcTemplate.update(sql, userId);
+    }
+
+    @Override
+    public Optional<User> findByVerificationToken(String token) {
+        String sql = "SELECT * FROM users WHERE verification_token = ?";
+        List<User> users = jdbcTemplate.query(sql, userRowMapper, token);
+        return users.stream().findFirst();
+    }
+
+    @Override
+    public int verifyEmail(Long userId) {
+        String sql = """
+            UPDATE users
+            SET email_verified = true,
+                verification_token = null
+            WHERE user_id = ?
+            """;
 
         return jdbcTemplate.update(sql, userId);
     }

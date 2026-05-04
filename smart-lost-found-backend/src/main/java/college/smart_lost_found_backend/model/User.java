@@ -18,4 +18,8 @@ public class User {
     private String role;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private Boolean emailVerified;
+    private String verificationToken;
+
+
 }

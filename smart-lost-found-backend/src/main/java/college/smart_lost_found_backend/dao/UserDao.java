@@ -23,4 +23,7 @@ public interface UserDao {
 
     int deleteById(Long userId);
 
+    Optional<User> findByVerificationToken(String token);
+
+    int verifyEmail(Long userId);
 }

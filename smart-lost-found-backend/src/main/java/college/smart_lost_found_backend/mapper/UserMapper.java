@@ -37,6 +37,8 @@ public class UserMapper {
         user.setFirstName(dto.getFirstName());
         user.setLastName(dto.getLastName());
         user.setPassword(dto.getPassword());
+        user.setEmailVerified(dto.getEmailVerified());
+        user.setVerificationToken(dto.getVerificationToken());
         return user;
     }
 }
