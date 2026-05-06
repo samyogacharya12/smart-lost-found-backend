@@ -5,9 +5,14 @@ import college.smart_lost_found_backend.enumconstant.ItemType;
 import college.smart_lost_found_backend.model.Item;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import java.sql.PreparedStatement;
+import java.sql.Statement;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Repository
@@ -57,7 +62,29 @@ public class ItemDaoImpl implements ItemDao {
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """;
 
-        return jdbcTemplate.update(sql, item.getUserId(), item.getCategoryId(), item.getLocationId(), item.getTitle(), item.getDescription(), item.getItemType().name(), item.getStatus().name(), item.getDateLostOrFound());
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+
+        jdbcTemplate.update(connection -> {
+
+            PreparedStatement ps = connection.prepareStatement(
+                    sql,
+                    Statement.RETURN_GENERATED_KEYS
+            );
+
+            ps.setLong(1, item.getUserId());
+            ps.setLong(2, item.getCategoryId());
+            ps.setLong(3, item.getLocationId());
+            ps.setString(4, item.getTitle());
+            ps.setString(5, item.getDescription());
+            ps.setString(6, item.getItemType().name());
+            ps.setString(7, item.getStatus().name());
+            ps.setObject(8, item.getDateLostOrFound());
+
+            return ps;
+
+        }, keyHolder);
+
+        return Objects.requireNonNull(keyHolder.getKey()).intValue();
     }
 
     @Override

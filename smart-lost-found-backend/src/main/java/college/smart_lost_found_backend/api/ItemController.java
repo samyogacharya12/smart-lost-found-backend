@@ -39,9 +39,9 @@ public class ItemController {
         return ResponseEntity.ok(itemService.findAll());
     }
 
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<ItemDto>> findByUserId(@PathVariable Long userId) {
-        return ResponseEntity.ok(itemService.findByUserId(userId));
+    @GetMapping("/user")
+    public ResponseEntity<List<ItemDto>> findByUserId() {
+        return ResponseEntity.ok(itemService.findByUserId());
     }
 
     @GetMapping("/type/{itemType}")

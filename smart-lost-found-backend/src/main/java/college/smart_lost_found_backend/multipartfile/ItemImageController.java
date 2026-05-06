@@ -15,7 +15,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 @Controller
-@RequestMapping("/file")
+@RequestMapping("/item")
 public class ItemImageController {
 
 

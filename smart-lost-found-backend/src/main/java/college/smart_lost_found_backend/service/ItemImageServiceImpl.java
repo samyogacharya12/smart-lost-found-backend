@@ -4,11 +4,15 @@ import college.smart_lost_found_backend.dao.ItemDao;
 import college.smart_lost_found_backend.dao.ItemImageDao;
 import college.smart_lost_found_backend.dto.ItemDto;
 import college.smart_lost_found_backend.dto.ItemImageDto;
+import college.smart_lost_found_backend.dto.UserDto;
+import college.smart_lost_found_backend.enumconstant.ItemStatus;
 import college.smart_lost_found_backend.mapper.ItemImageMapper;
 import college.smart_lost_found_backend.mapper.ItemMapper;
 import college.smart_lost_found_backend.model.Item;
 import college.smart_lost_found_backend.model.ItemImage;
+import college.smart_lost_found_backend.util.SecurityUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,11 +33,17 @@ public class ItemImageServiceImpl implements ItemImageService {
 
     private final ItemImageDao itemImageDao;
 
+    private final UserService userService;
+
+
     private static final String UPLOAD_DIR = "uploads/items/";
 
-    public ItemImageServiceImpl(ItemImageDao itemImageDao, ItemDao itemDao) {
+    public ItemImageServiceImpl(ItemImageDao itemImageDao,
+                                ItemDao itemDao,
+                                UserService userService) {
         this.itemImageDao = itemImageDao;
         this.itemDao = itemDao;
+        this.userService = userService;
     }
 
     @Override
@@ -105,13 +115,21 @@ public class ItemImageServiceImpl implements ItemImageService {
     @Override
     public ItemDto saveItemWithImage(ItemDto itemDto, MultipartFile file) {
         log.info("saving item with image");
-        Item item = ItemMapper.toEntity(itemDto);
-        int itemId = itemDao.save(item);
-        itemDto.setItemId((long) itemId);
-        if (file != null && !file.isEmpty()) {
-            uploadImage(Long.parseLong(String.valueOf(itemId)), file);
+        try {
+            String username = SecurityUtil.getCurrentUsername();
+            Optional<UserDto> userDto = userService.findByUsername(username);
+            userDto.ifPresent(dto -> itemDto.setUserId(dto.getId()));
+            itemDto.setStatus(ItemStatus.OPEN.toString());
+            Item item = ItemMapper.toEntity(itemDto);
+            int itemId = itemDao.save(item);
+            itemDto.setItemId((long) itemId);
+            if (file != null && !file.isEmpty()) {
+                uploadImage(Long.parseLong(String.valueOf(itemId)), file);
+            }
+            return itemDto;
+        } catch (Exception exception) {
+            log.error("error in saving item with image: " + exception.getMessage());
         }
-
-        return itemDto;
+        return null;
     }
 }
