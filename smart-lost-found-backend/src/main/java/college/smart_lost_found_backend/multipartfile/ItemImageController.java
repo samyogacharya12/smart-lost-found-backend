@@ -3,6 +3,7 @@ package college.smart_lost_found_backend.multipartfile;
 import college.smart_lost_found_backend.dto.ItemDto;
 import college.smart_lost_found_backend.dto.ItemImageDto;
 import college.smart_lost_found_backend.service.ItemImageService;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -55,14 +56,14 @@ public class ItemImageController {
     }
 
 
-    @PostMapping("/images/download")
-    public ResponseEntity<byte[]> getImage(@RequestBody ItemImageDto itemImageDto) {
+    @GetMapping("/images/download/{itemId}/{imageId}")
+    public ResponseEntity<byte[]> getImage(@PathVariable Long  imageId, @PathVariable Long  itemId) {
         try {
-            byte[] imageBytes = itemImageService.downloadImage(itemImageDto
-                    .getItemId(), itemImageDto.getId());
+            byte[] imageBytes = itemImageService.downloadImage(imageId, itemId);
 
             return ResponseEntity.ok()
-                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .contentType(MediaType.IMAGE_JPEG)
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline")
                     .body(imageBytes);
 
         } catch (Exception e) {

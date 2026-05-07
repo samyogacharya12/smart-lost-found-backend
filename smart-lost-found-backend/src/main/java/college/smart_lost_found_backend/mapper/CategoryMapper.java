@@ -4,6 +4,9 @@ import college.smart_lost_found_backend.dto.CategoryDto;
 import college.smart_lost_found_backend.model.Category;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 @Service
 public class CategoryMapper {
 
@@ -28,7 +31,7 @@ public class CategoryMapper {
         category.setCategoryId(dto.getCategoryId());
         category.setCategoryName(dto.getCategoryName());
         category.setDescription(dto.getDescription());
-        category.setCreatedDate(dto.getCreatedDate());
+        category.setCreatedDate(LocalDateTime.now());
         return category;
     }
 

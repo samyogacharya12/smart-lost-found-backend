@@ -43,7 +43,7 @@ public class CategoryController {
 
 
 
-    @GetMapping("/categories")
+    @GetMapping("/category")
     public ResponseEntity<List<CategoryDto>> getCategories() {
         log.info("fetching categories");
         return new ResponseEntity<>(categoryService.findAll(), HttpStatus.OK);

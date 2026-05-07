@@ -9,6 +9,7 @@ import java.time.LocalDate;
 public class ItemDto implements Serializable {
 
     private Long itemId;
+    private Long imageId;
     private Long userId;
     private Long categoryId;
     private String categoryName;
@@ -19,4 +20,6 @@ public class ItemDto implements Serializable {
     private String itemType;
     private String status;
     private LocalDate dateLostOrFound;
+    private String imageUrl;
+
 }

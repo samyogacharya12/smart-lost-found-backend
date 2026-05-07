@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.ResultSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 
@@ -30,7 +31,9 @@ public class CategoryDaoImpl implements CategoryDao {
         category.setCategoryId(rs.getLong("category_id"));
         category.setCategoryName(rs.getString("category_name"));
         category.setDescription(rs.getString("description"));
-        category.setCreatedDate(rs.getTimestamp("created_at").toLocalDateTime());
+        if(Objects.nonNull(rs.getTimestamp("created_at"))) {
+            category.setCreatedDate(rs.getTimestamp("created_at").toLocalDateTime());
+        }
         return category;
     };
 

@@ -1,6 +1,7 @@
 package college.smart_lost_found_backend.service;
 
 import college.smart_lost_found_backend.dao.ItemDao;
+import college.smart_lost_found_backend.dao.ItemImageDao;
 import college.smart_lost_found_backend.dto.CategoryDto;
 import college.smart_lost_found_backend.dto.ItemDto;
 import college.smart_lost_found_backend.dto.LocationDto;
@@ -8,6 +9,7 @@ import college.smart_lost_found_backend.dto.UserDto;
 import college.smart_lost_found_backend.enumconstant.ItemStatus;
 import college.smart_lost_found_backend.mapper.ItemMapper;
 import college.smart_lost_found_backend.model.Item;
+import college.smart_lost_found_backend.model.ItemImage;
 import college.smart_lost_found_backend.util.SecurityUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -24,6 +27,7 @@ public class ItemServiceImpl implements ItemService {
 
     private final ItemDao itemDao;
 
+    private final ItemImageDao itemImageDao;
 
     private final CategoryService categoryService;
 
@@ -34,11 +38,13 @@ public class ItemServiceImpl implements ItemService {
     public ItemServiceImpl(ItemDao itemDao,
                            CategoryService categoryService,
                            LocationService locationService,
-                           UserService userService) {
+                           UserService userService,
+                           ItemImageDao itemImageDao) {
         this.itemDao = itemDao;
         this.categoryService = categoryService;
         this.locationService = locationService;
         this.userService = userService;
+        this.itemImageDao = itemImageDao;
     }
 
     @Override
@@ -80,6 +86,10 @@ public class ItemServiceImpl implements ItemService {
             itemDto.setCategoryName(categoryDto.getCategoryName());
             LocationDto locationDto = locationService.findById(itemDto.getLocationId());
             itemDto.setLocationName(locationDto.getLocationName());
+            List<ItemImage> itemImages=itemImageDao.findByItemId(itemDto.getItemId());
+             if(!itemImages.isEmpty()){
+                 itemDto.setImageId(itemImages.getFirst().getId());
+             }
         });
         return itemDtos;
     }
