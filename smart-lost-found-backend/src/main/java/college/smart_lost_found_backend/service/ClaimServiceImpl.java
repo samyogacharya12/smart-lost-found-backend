@@ -4,12 +4,15 @@ import college.smart_lost_found_backend.dao.ClaimDao;
 import college.smart_lost_found_backend.dao.ItemDao;
 import college.smart_lost_found_backend.dao.UserDao;
 import college.smart_lost_found_backend.dto.ClaimDto;
+import college.smart_lost_found_backend.dto.UserDto;
 import college.smart_lost_found_backend.enumconstant.ClaimStatus;
 import college.smart_lost_found_backend.enumconstant.ItemStatus;
 import college.smart_lost_found_backend.exceptions.Invalid;
 import college.smart_lost_found_backend.mapper.ClaimMapper;
 import college.smart_lost_found_backend.model.Claim;
 import college.smart_lost_found_backend.model.Item;
+import college.smart_lost_found_backend.model.User;
+import college.smart_lost_found_backend.util.SecurityUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,6 +56,8 @@ public class ClaimServiceImpl implements ClaimService {
           throw new Invalid("Item not found", claimDto);
         }
         try {
+            UserDto userDto=SecurityUtil.getCurrentUser();
+            claimDto.setUserId(userDto.getId());
             Claim claim = ClaimMapper.toEntity(claimDto);
             claim.setStatus(ClaimStatus.PENDING);
 
@@ -126,14 +131,15 @@ public class ClaimServiceImpl implements ClaimService {
     }
 
     @Override
-    public List<ClaimDto> findByUserId(Long userId) {
+    public List<ClaimDto> findByUserId() {
         try {
-            return claimDao.findByUserId(userId)
+            UserDto userDto= SecurityUtil.getCurrentUser();
+            return claimDao.findByUserId(userDto.getId())
                     .stream()
                     .map(ClaimMapper::toDto)
                     .toList();
         } catch (Exception e) {
-            log.error("ClaimServiceImpl findByUserId {}", userId, e);
+            log.error("ClaimServiceImpl findByUserId {}", e);
         }
         return List.of();
     }

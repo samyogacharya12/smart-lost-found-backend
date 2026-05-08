@@ -14,7 +14,7 @@ public interface ClaimService {
 
     List<ClaimDto> findByItemId(Long itemId);
 
-    List<ClaimDto> findByUserId(Long userId);
+    List<ClaimDto> findByUserId();
 
     ClaimDto approveClaim(Long claimId);
 

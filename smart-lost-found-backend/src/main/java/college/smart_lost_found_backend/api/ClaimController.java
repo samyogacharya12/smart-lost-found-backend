@@ -46,9 +46,9 @@ public class ClaimController {
         return ResponseEntity.ok(claimService.findByItemId(itemId));
     }
 
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<ClaimDto>> findByUserId(@PathVariable Long userId) {
-        return ResponseEntity.ok(claimService.findByUserId(userId));
+    @GetMapping("/user")
+    public ResponseEntity<List<ClaimDto>> findByUserId() {
+        return ResponseEntity.ok(claimService.findByUserId());
     }
 
     @PreAuthorize("hasAuthority('ADMIN')")
