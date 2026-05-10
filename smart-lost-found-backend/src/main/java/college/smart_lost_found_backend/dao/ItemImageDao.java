@@ -9,6 +9,12 @@ public interface ItemImageDao {
 
     int save(Long itemId, String imageUrl);
 
+    int saveClaim(Long claimId, String imageUrl);
+
+    Optional<ItemImage> getImageByClaimId(Long claimId);
+
+
+    Optional<ItemImage> getImageByIdAndClaimId(Long itemImageId, Long claimId);
 
     Optional<ItemImage> getImageByIdAndItemId(Long imageId, Long itemId);
 

@@ -28,11 +28,17 @@ public class UserDto extends BaseDto {
                    String userName,
                    String email,
                    String roles,
-                   Boolean emailVerified) {
+                   Boolean emailVerified,
+                   String phoneNumber,
+                   String firstName,
+                   String lastName) {
         this.id=id;
         this.userName=userName;
         this.email=email;
         this.roles=roles;
         this.emailVerified=emailVerified;
+        this.phoneNumber=phoneNumber;
+        this.firstName=firstName;
+        this.lastName=lastName;
     }
 }

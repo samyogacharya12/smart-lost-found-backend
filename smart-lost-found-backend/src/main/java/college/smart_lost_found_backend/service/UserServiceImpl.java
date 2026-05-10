@@ -4,6 +4,7 @@ import college.smart_lost_found_backend.dao.UserDao;
 import college.smart_lost_found_backend.dto.RestResponse;
 import college.smart_lost_found_backend.dto.UserDto;
 import college.smart_lost_found_backend.dto.UserInfoDetails;
+import college.smart_lost_found_backend.enumconstant.ResponseStatus;
 import college.smart_lost_found_backend.exceptions.Invalid;
 import college.smart_lost_found_backend.mapper.UserMapper;
 import college.smart_lost_found_backend.model.User;
@@ -20,9 +21,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -109,6 +112,36 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         restResponse.setMessage("Email did not got verified");
         restResponse.setStatus(HttpStatus.ALREADY_REPORTED.toString());
         return restResponse;
+    }
+
+    @Override
+    public RestResponse findAll() {
+        log.info("UserServiceImpl findAll");
+        RestResponse restResponse = RestResponse.builder().build();
+        try {
+            List<UserDto> userDtoList= userDao.findAll()
+                    .stream().map(UserMapper::toDto)
+                    .toList();
+            restResponse.setDetail(userDtoList);
+            restResponse.setResponseStatus(ResponseStatus.SUCCESS);
+            restResponse.setStatus(HttpStatus.ACCEPTED.toString());
+            return restResponse;
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+        return RestResponse.builder().build();
+    }
+
+    @Override
+    public UserDto findByUserId(Long userId) {
+        log.info("UserServiceImpl findByUserId {}", userId);
+        try {
+            return userDao.findById(userId).stream().map(UserMapper::toDto)
+                    .findFirst().orElse(null);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+        return null;
     }
 
 

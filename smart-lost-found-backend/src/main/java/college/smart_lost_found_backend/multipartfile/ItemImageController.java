@@ -1,5 +1,6 @@
 package college.smart_lost_found_backend.multipartfile;
 
+import college.smart_lost_found_backend.dto.ClaimDto;
 import college.smart_lost_found_backend.dto.ItemDto;
 import college.smart_lost_found_backend.dto.ItemImageDto;
 import college.smart_lost_found_backend.service.ItemImageService;
@@ -35,6 +36,7 @@ public class ItemImageController {
         return ResponseEntity.ok(itemImageService.uploadImage(itemId, file));
     }
 
+
     @GetMapping("/{itemId}/images")
     public ResponseEntity<List<ItemImageDto>> getImagesByItemId(@PathVariable Long itemId) {
         return ResponseEntity.ok(itemImageService.getImagesByItemId(itemId));
@@ -46,6 +48,14 @@ public class ItemImageController {
             @RequestPart(value = "file", required = false) MultipartFile file
     ) {
         return ResponseEntity.ok(itemImageService.saveItemWithImage(itemDto, file));
+    }
+
+    @PostMapping(value = "/claim/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ClaimDto> saveClaimWithImage(
+            ClaimDto claimDto,
+            @RequestPart(value = "file", required = false) MultipartFile file
+    ) {
+        return ResponseEntity.ok(itemImageService.saveClaimWithImage(claimDto, file));
     }
 
 
@@ -60,6 +70,21 @@ public class ItemImageController {
     public ResponseEntity<byte[]> getImage(@PathVariable Long  imageId, @PathVariable Long  itemId) {
         try {
             byte[] imageBytes = itemImageService.downloadImage(imageId, itemId);
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_JPEG)
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline")
+                    .body(imageBytes);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to load image: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/claim/download/{imageId}/{claimId}")
+    public ResponseEntity<byte[]> geClaimtImage(@PathVariable Long  imageId, @PathVariable Long  claimId) {
+        try {
+            byte[] imageBytes = itemImageService.downloadImageByClaim(claimId,imageId);
 
             return ResponseEntity.ok()
                     .contentType(MediaType.IMAGE_JPEG)

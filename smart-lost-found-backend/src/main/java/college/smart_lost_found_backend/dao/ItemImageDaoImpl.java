@@ -43,6 +43,37 @@ public class ItemImageDaoImpl implements ItemImageDao {
     }
 
     @Override
+    public int saveClaim(Long claimId, String imageUrl) {
+        String sql= """
+                INSERT INTO item_images (claim_id, file_path)
+                VALUES (?, ?)
+                """;
+        return jdbcTemplate.update(sql, claimId, imageUrl);
+    }
+
+    @Override
+    public Optional<ItemImage> getImageByClaimId(Long claimId) {
+        String sql = """
+                SELECT *
+                FROM item_images
+                WHERE claim_id = ?
+                """;
+        List<ItemImage> itemImages= jdbcTemplate.query(sql, rowMapper ,claimId);
+        return itemImages.stream().findFirst();
+    }
+
+    @Override
+    public Optional<ItemImage> getImageByIdAndClaimId(Long itemImageId, Long claimId) {
+        String sql = """
+                SELECT *
+                FROM item_images
+                WHERE id=? and claim_id = ?
+                """;
+        List<ItemImage> itemImages= jdbcTemplate.query(sql, rowMapper,itemImageId ,claimId);
+        return itemImages.stream().findFirst();
+    }
+
+    @Override
     public Optional<ItemImage> getImageByIdAndItemId(Long imageId, Long itemId) {
         String sql = """
                 SELECT *

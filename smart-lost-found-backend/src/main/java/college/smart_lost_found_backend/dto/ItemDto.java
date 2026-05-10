@@ -11,6 +11,7 @@ public class ItemDto implements Serializable {
     private Long itemId;
     private Long imageId;
     private Long userId;
+    private String userName;
     private Long categoryId;
     private String categoryName;
     private Long locationId;

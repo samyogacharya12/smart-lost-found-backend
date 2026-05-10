@@ -87,7 +87,6 @@ public class UserDaoImpl implements UserDao {
     @Override
     public List<User> findAll() {
         String sql = "SELECT * FROM users ORDER BY created_at DESC";
-
         return jdbcTemplate.query(sql, userRowMapper);
     }
 

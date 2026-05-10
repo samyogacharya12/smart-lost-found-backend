@@ -18,7 +18,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -90,6 +89,8 @@ public class ItemServiceImpl implements ItemService {
              if(!itemImages.isEmpty()){
                  itemDto.setImageId(itemImages.getFirst().getId());
              }
+             UserDto userDto=userService.findByUserId(itemDto.getUserId());
+             itemDto.setUserName(userDto.getUserName());
         });
         return itemDtos;
     }
@@ -137,10 +138,11 @@ public class ItemServiceImpl implements ItemService {
     public List<ItemDto> findByItemType(String itemType) {
         log.info("Fetching items by type: {}", itemType);
         try {
-            return itemDao.findByItemType(itemType)
+            List<ItemDto> itemDtos= itemDao.findByItemType(itemType)
                     .stream()
                     .map(ItemMapper::toDto)
                     .toList();
+            return mapToDto(itemDtos);
         } catch (Exception e) {
             log.error(e.getMessage());
         }

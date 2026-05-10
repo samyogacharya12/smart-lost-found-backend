@@ -2,12 +2,15 @@ package college.smart_lost_found_backend.service;
 
 import college.smart_lost_found_backend.dao.ItemDao;
 import college.smart_lost_found_backend.dao.ItemImageDao;
+import college.smart_lost_found_backend.dto.ClaimDto;
 import college.smart_lost_found_backend.dto.ItemDto;
 import college.smart_lost_found_backend.dto.ItemImageDto;
 import college.smart_lost_found_backend.dto.UserDto;
 import college.smart_lost_found_backend.enumconstant.ItemStatus;
+import college.smart_lost_found_backend.mapper.ClaimMapper;
 import college.smart_lost_found_backend.mapper.ItemImageMapper;
 import college.smart_lost_found_backend.mapper.ItemMapper;
+import college.smart_lost_found_backend.model.Claim;
 import college.smart_lost_found_backend.model.Item;
 import college.smart_lost_found_backend.model.ItemImage;
 import college.smart_lost_found_backend.util.SecurityUtil;
@@ -35,15 +38,22 @@ public class ItemImageServiceImpl implements ItemImageService {
 
     private final UserService userService;
 
+    private final ClaimService claimService;
+
 
     private static final String UPLOAD_DIR = "uploads/items/";
 
+    private static final String UPLOAD_CLAIM_DIR = "uploads/claims/";
+
+
     public ItemImageServiceImpl(ItemImageDao itemImageDao,
                                 ItemDao itemDao,
-                                UserService userService) {
+                                UserService userService,
+                                ClaimService claimService) {
         this.itemImageDao = itemImageDao;
         this.itemDao = itemDao;
         this.userService = userService;
+        this.claimService = claimService;
     }
 
     @Override
@@ -68,6 +78,33 @@ public class ItemImageServiceImpl implements ItemImageService {
 
             ItemImageDto dto = new ItemImageDto();
             dto.setItemId(itemId);
+            dto.setPath(filePath.toAbsolutePath().toString());
+
+            return dto;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to upload image: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public ItemImageDto uploadImageByClaim(Long claimId, MultipartFile file) {
+        log.info("uploadImageByClaim");
+        if (file.isEmpty()) {
+            throw new RuntimeException("File is empty");
+        }
+        try {
+            Path path = Paths.get(UPLOAD_CLAIM_DIR);
+            if (!Files.exists(path)) {
+                Files.createDirectories(path);
+            }
+            String originalFileName = file.getOriginalFilename();
+            String fileName = UUID.randomUUID() + "_" + originalFileName;
+            Path filePath = Paths.get(UPLOAD_CLAIM_DIR + fileName);
+            Files.write(filePath, file.getBytes());
+            itemImageDao.saveClaim(claimId, filePath.toAbsolutePath().toString());
+            ItemImageDto dto = new ItemImageDto();
+            dto.setClaimId(claimId);
             dto.setPath(filePath.toAbsolutePath().toString());
 
             return dto;
@@ -108,6 +145,22 @@ public class ItemImageServiceImpl implements ItemImageService {
     }
 
     @Override
+    public byte[] downloadImageByClaim(Long claimId, Long itemImageId) {
+        log.info("downloadImageByClaim");
+        try {
+            Path filePath;
+            Optional<ItemImage> imageDto = itemImageDao.getImageByIdAndClaimId(itemImageId, claimId);
+            if (imageDto.isPresent()) {
+                filePath = Paths.get(imageDto.get().getPath());
+                return Files.readAllBytes(filePath);
+            }
+        } catch (Exception exception) {
+            log.error("error in download image by downloadImageByClaim: {}", exception.getMessage());
+        }
+        return null;
+    }
+
+    @Override
     public void deleteImage(Long imageId) {
         itemImageDao.deleteById(imageId);
     }
@@ -129,6 +182,28 @@ public class ItemImageServiceImpl implements ItemImageService {
             return itemDto;
         } catch (Exception exception) {
             log.error("error in saving item with image: " + exception.getMessage());
+        }
+        return null;
+    }
+
+    @Override
+    public ClaimDto saveClaimWithImage(ClaimDto claimDto, MultipartFile file) {
+        log.info("saving claim with image");
+        try{
+            String username = SecurityUtil.getCurrentUsername();
+            Optional<UserDto> userDto = userService.findByUsername(username);
+            ClaimDto finalClaimDto = claimDto;
+            userDto.ifPresent(dto -> finalClaimDto.setUserId(dto.getId()));
+            if(userDto.isPresent()){
+                claimDto=claimService.save(finalClaimDto, userDto.get());
+            }
+            if (file != null && !file.isEmpty()) {
+                uploadImageByClaim(claimDto.getClaimId(), file);
+            }
+            return claimDto;
+
+        } catch (Exception exception){
+            log.error("error in saving claim with image: " + exception.getMessage());
         }
         return null;
     }

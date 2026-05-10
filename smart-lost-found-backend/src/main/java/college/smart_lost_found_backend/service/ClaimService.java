@@ -1,12 +1,13 @@
 package college.smart_lost_found_backend.service;
 
 import college.smart_lost_found_backend.dto.ClaimDto;
+import college.smart_lost_found_backend.dto.UserDto;
 
 import java.util.List;
 
 public interface ClaimService {
 
-    ClaimDto save(ClaimDto claimDto);
+    ClaimDto save(ClaimDto claimDto, UserDto userDto);
 
     ClaimDto findById(Long claimId);
 

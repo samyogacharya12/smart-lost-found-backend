@@ -13,6 +13,11 @@ public interface UserService {
     RestResponse verifyEmail(String token);
 
 
+    RestResponse findAll();
+
+
+    UserDto findByUserId(Long userId);
+
     Optional<UserDto> findByUsername(String username);
 
     UserDetails loadUserByUsername(String username);

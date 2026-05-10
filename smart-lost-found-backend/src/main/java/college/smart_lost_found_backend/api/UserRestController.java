@@ -25,7 +25,7 @@ public class UserRestController {
         this.authenticationService = authenticationService;
     }
 
-    @PostMapping("/users")
+    @PostMapping("/register")
     public ResponseEntity<RestResponse> save(@RequestBody UserDto userDto) {
         log.info("UserRestController save userDto ");
         return new ResponseEntity<>(userService.save(userDto), HttpStatus.OK);
@@ -41,6 +41,12 @@ public class UserRestController {
     @GetMapping("/verify")
     public ResponseEntity<RestResponse> verifyEmail(@RequestParam String token) {
        RestResponse restResponse= userService.verifyEmail(token);
+        return ResponseEntity.ok(restResponse);
+    }
+
+    @GetMapping("/users")
+    public ResponseEntity<RestResponse> getAll() {
+        RestResponse restResponse= userService.findAll();
         return ResponseEntity.ok(restResponse);
     }
 

@@ -5,6 +5,7 @@ import college.smart_lost_found_backend.dto.UserDto;
 import college.smart_lost_found_backend.model.User;
 import college.smart_lost_found_backend.service.UserService;
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -12,10 +13,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import java.util.Optional;
 
 @UtilityClass
+@Slf4j
 public class SecurityUtil {
 
     @Autowired
-    private  UserService userService;
+    private UserService userService;
 
     public static String getCurrentUsername() {
 
@@ -28,9 +30,14 @@ public class SecurityUtil {
     }
 
     public static UserDto getCurrentUser() {
-        String username = getCurrentUsername();
-        Optional<UserDto> user = userService.findByUsername(username);
-        return user.orElse(null);
+        try {
+            String username = getCurrentUsername();
+            Optional<UserDto> user = userService.findByUsername(username);
+            return user.orElse(null);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+        return null;
     }
 
 }

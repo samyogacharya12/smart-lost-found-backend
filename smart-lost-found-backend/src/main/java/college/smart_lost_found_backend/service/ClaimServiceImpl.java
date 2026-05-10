@@ -2,8 +2,10 @@ package college.smart_lost_found_backend.service;
 
 import college.smart_lost_found_backend.dao.ClaimDao;
 import college.smart_lost_found_backend.dao.ItemDao;
+import college.smart_lost_found_backend.dao.ItemImageDao;
 import college.smart_lost_found_backend.dao.UserDao;
 import college.smart_lost_found_backend.dto.ClaimDto;
+import college.smart_lost_found_backend.dto.ItemDto;
 import college.smart_lost_found_backend.dto.UserDto;
 import college.smart_lost_found_backend.enumconstant.ClaimStatus;
 import college.smart_lost_found_backend.enumconstant.ItemStatus;
@@ -11,6 +13,7 @@ import college.smart_lost_found_backend.exceptions.Invalid;
 import college.smart_lost_found_backend.mapper.ClaimMapper;
 import college.smart_lost_found_backend.model.Claim;
 import college.smart_lost_found_backend.model.Item;
+import college.smart_lost_found_backend.model.ItemImage;
 import college.smart_lost_found_backend.model.User;
 import college.smart_lost_found_backend.util.SecurityUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -35,35 +38,40 @@ public class ClaimServiceImpl implements ClaimService {
 
     private final NotificationService notificationService;
 
+    private final ItemImageDao itemImageDao;
+
+
     public ClaimServiceImpl(ClaimDao claimDao,
                             ItemDao itemDao,
                             EmailService emailService,
                             UserDao userDao,
-                            NotificationService notificationService) {
+                            NotificationService notificationService,
+                            ItemImageDao itemImageDao) {
         this.claimDao = claimDao;
         this.itemDao = itemDao;
         this.emailService = emailService;
         this.userDao = userDao;
         this.notificationService = notificationService;
+        this.itemImageDao = itemImageDao;
     }
 
 
     @Override
-    public ClaimDto save(ClaimDto claimDto) {
+    public ClaimDto save(ClaimDto claimDto,  UserDto userDto) {
         log.info("ClaimServiceImpl save claimDto {}", claimDto);
         Optional<Item> item = itemDao.findById(claimDto.getItemId());
         if (item.isEmpty()) {
           throw new Invalid("Item not found", claimDto);
         }
+        assert userDto != null;
+        if(item.get().getUserId().equals(userDto.getId())){
+            throw new Invalid("You cannot claim your own item", claimDto);
+        }
         try {
-            UserDto userDto=SecurityUtil.getCurrentUser();
             claimDto.setUserId(userDto.getId());
             Claim claim = ClaimMapper.toEntity(claimDto);
             claim.setStatus(ClaimStatus.PENDING);
-
-            claimDao.save(claim);
-
-
+            int claimId=claimDao.save(claim);
             item.ifPresent(value -> notificationService.sendNotification(
                     claim.getUserId(),
                     "Claim Submitted",
@@ -81,7 +89,7 @@ public class ClaimServiceImpl implements ClaimService {
             // When user claims item, item becomes CLAIMED
             itemDao.updateStatus(claim.getItemId(),
                     ItemStatus.CLAIMED);
-
+            claim.setClaimId((long) claimId);
             return ClaimMapper.toDto(claim);
         } catch (Exception e) {
             log.error("ClaimServiceImpl save claimDto {}", claimDto, e);
@@ -106,10 +114,11 @@ public class ClaimServiceImpl implements ClaimService {
     public List<ClaimDto> findAll() {
         log.info("ClaimServiceImpl findAll");
         try {
-            return claimDao.findAll()
+            List<ClaimDto> claimDtos= claimDao.findAll()
                     .stream()
                     .map(ClaimMapper::toDto)
                     .toList();
+            return mapToDto(claimDtos);
         } catch (Exception e) {
             log.error("ClaimServiceImpl findAll {}", claimDao, e);
         }
@@ -130,14 +139,31 @@ public class ClaimServiceImpl implements ClaimService {
         return List.of();
     }
 
-    @Override
+    private List<ClaimDto> mapToDto(List<ClaimDto> claimDtos) {
+        claimDtos.forEach(claimDto -> {
+            Optional<Item> item=itemDao.findById(claimDto.getItemId());
+            Optional<ItemImage> itemImage=itemImageDao.getImageByClaimId(claimDto.getClaimId());
+            itemImage.ifPresent(image -> claimDto.setImageId(image.getId()));
+            item.ifPresent(item1 -> {claimDto.setItemName(item.get().getTitle());});
+            Optional<User> user=userDao.findById(claimDto.getUserId());
+            user.ifPresent(user1 -> {claimDto.setUserName(user1.getUsername());});
+        });
+        return claimDtos;
+    }
+
+
+        @Override
     public List<ClaimDto> findByUserId() {
         try {
-            UserDto userDto= SecurityUtil.getCurrentUser();
-            return claimDao.findByUserId(userDto.getId())
-                    .stream()
-                    .map(ClaimMapper::toDto)
-                    .toList();
+            String username=SecurityUtil.getCurrentUsername();
+            Optional<User> user=userDao.findByName(username);
+            if (user.isPresent()) {
+                List<ClaimDto> claimDtos= claimDao.findByUserId(user.get().getUserId())
+                        .stream()
+                        .map(ClaimMapper::toDto)
+                        .toList();
+                return mapToDto(claimDtos);
+            }
         } catch (Exception e) {
             log.error("ClaimServiceImpl findByUserId {}", e);
         }
