@@ -3,8 +3,6 @@ package college.smart_lost_found_backend.api;
 import college.smart_lost_found_backend.dto.ItemDto;
 import college.smart_lost_found_backend.service.ItemService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpCookie;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -28,6 +26,15 @@ public class ItemController {
         log.info("Saving item");
         return ResponseEntity.ok(itemService.save(itemDto));
     }
+
+
+    @PostMapping("/search")
+    public ResponseEntity<List<ItemDto>> searchItems(@RequestBody ItemDto itemDto) {
+        log.info("searching item");
+        return ResponseEntity.ok(itemService
+                .searchItems(itemDto.getTitle(), itemDto.getLocationId()));
+    }
+
 
     @GetMapping("/{itemId}")
     public ResponseEntity<ItemDto> findById(@PathVariable Long itemId) {
@@ -58,13 +65,12 @@ public class ItemController {
     }
 
     @PreAuthorize("hasAuthority('ADMIN')")
-    @PatchMapping("/{itemId}/status")
+    @PatchMapping("/status")
     public ResponseEntity<ItemDto> updateStatus(
-            @PathVariable Long itemId,
-            @RequestParam String status
+            @RequestBody  ItemDto itemDto
     ) {
-        ItemDto itemDto = itemService.updateStatus(itemId, status);
-        return ResponseEntity.ok(itemDto);
+        ItemDto itemDto1=itemService.updateStatus(itemDto);
+        return ResponseEntity.ok(itemDto1);
     }
 
     @PreAuthorize("hasAuthority('ADMIN')")

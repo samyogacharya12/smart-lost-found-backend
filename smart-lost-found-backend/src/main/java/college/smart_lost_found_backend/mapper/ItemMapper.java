@@ -33,10 +33,13 @@ public class ItemMapper {
         ItemDto dto = new ItemDto();
         dto.setItemId(item.getItemId());
         dto.setUserId(item.getUserId());
+        dto.setUserName(item.getUserName());
         dto.setCategoryId(item.getCategoryId());
         dto.setLocationId(item.getLocationId());
+        dto.setLocationName(item.getLocationName());
         dto.setTitle(item.getTitle());
         dto.setDescription(item.getDescription());
+        dto.setImageId(item.getImageId());
         dto.setItemType(item.getItemType().toString());
         dto.setStatus(item.getStatus().toString());
         dto.setDateLostOrFound(item.getDateLostOrFound());

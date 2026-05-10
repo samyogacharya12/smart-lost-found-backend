@@ -5,10 +5,10 @@ import college.smart_lost_found_backend.dao.ItemDao;
 import college.smart_lost_found_backend.dao.ItemImageDao;
 import college.smart_lost_found_backend.dao.UserDao;
 import college.smart_lost_found_backend.dto.ClaimDto;
-import college.smart_lost_found_backend.dto.ItemDto;
 import college.smart_lost_found_backend.dto.UserDto;
 import college.smart_lost_found_backend.enumconstant.ClaimStatus;
 import college.smart_lost_found_backend.enumconstant.ItemStatus;
+import college.smart_lost_found_backend.enumconstant.ItemType;
 import college.smart_lost_found_backend.exceptions.Invalid;
 import college.smart_lost_found_backend.mapper.ClaimMapper;
 import college.smart_lost_found_backend.model.Claim;
@@ -66,6 +66,9 @@ public class ClaimServiceImpl implements ClaimService {
         assert userDto != null;
         if(item.get().getUserId().equals(userDto.getId())){
             throw new Invalid("You cannot claim your own item", claimDto);
+        }
+        if(!item.get().getItemType().equals(ItemType.FOUND)){
+            throw new Invalid("ItemType not found", claimDto);
         }
         try {
             claimDto.setUserId(userDto.getId());

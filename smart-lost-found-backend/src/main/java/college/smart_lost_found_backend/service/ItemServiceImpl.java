@@ -10,14 +10,19 @@ import college.smart_lost_found_backend.enumconstant.ItemStatus;
 import college.smart_lost_found_backend.mapper.ItemMapper;
 import college.smart_lost_found_backend.model.Item;
 import college.smart_lost_found_backend.model.ItemImage;
+import college.smart_lost_found_backend.model.User;
 import college.smart_lost_found_backend.util.SecurityUtil;
+import io.micrometer.common.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.util.StringUtil;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -53,6 +58,7 @@ public class ItemServiceImpl implements ItemService {
             String username = SecurityUtil.getCurrentUsername();
             Optional<UserDto> userDto= userService.findByUsername(username);
             userDto.ifPresent(dto -> itemDto.setUserId(dto.getId()));
+            itemDto.setDateLostOrFound(LocalDate.now());
             Item item = ItemMapper.toEntity(itemDto);
             if (item.getStatus() == null) {
                 item.setStatus(ItemStatus.OPEN);
@@ -138,11 +144,23 @@ public class ItemServiceImpl implements ItemService {
     public List<ItemDto> findByItemType(String itemType) {
         log.info("Fetching items by type: {}", itemType);
         try {
-            List<ItemDto> itemDtos= itemDao.findByItemType(itemType)
-                    .stream()
-                    .map(ItemMapper::toDto)
-                    .toList();
-            return mapToDto(itemDtos);
+            List<ItemDto> itemDtos;
+            String username=SecurityUtil.getCurrentUsername();
+            Optional<UserDto> user=userService.findByUsername(username);
+            if(user.isPresent()) {
+                if(user.get().getRoles().equalsIgnoreCase("ADMIN")){
+                    itemDtos= itemDao.findByItemType(itemType)
+                            .stream()
+                            .map(ItemMapper::toDto)
+                            .toList();
+                } else {
+                    itemDtos= itemDao.findByItemTypeAndUserId(itemType, user.get().getId())
+                            .stream()
+                            .map(ItemMapper::toDto)
+                            .toList();
+                }
+                return mapToDto(itemDtos);
+            }
         } catch (Exception e) {
             log.error(e.getMessage());
         }
@@ -156,7 +174,7 @@ public class ItemServiceImpl implements ItemService {
             itemDao.findById(itemId)
                     .orElseThrow(() -> new RuntimeException("Item not found"));
 
-            itemDto.setItemId(itemId);
+            itemDto.setItemId(itemDto.getItemId());
 
             Item item = ItemMapper.toEntity(itemDto);
             itemDao.update(item);
@@ -169,20 +187,53 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public ItemDto updateStatus(Long itemId, String status) {
-        log.info("Updating item status. Item id: {}, status: {}", itemId, status);
+    public ItemDto updateStatus(ItemDto itemDto) {
+        log.info("Updating item status. Item id: {}, status: {}", itemDto.getItemId(), itemDto.getItemId());
         try {
-            itemDao.findById(itemId)
+            itemDao.findById(itemDto.getItemId())
                     .orElseThrow(() -> new RuntimeException("Item not found"));
 
-            int response = itemDao.updateStatus(itemId,
-                    ItemStatus.valueOf(status));
+            int response = itemDao.updateStatus(itemDto.getItemId(),
+                    ItemStatus.valueOf(itemDto.getStatus()));
             if (response == 1) {
-                Optional<Item> item = itemDao.findById(itemId);
+                Optional<Item> item = itemDao.findById(itemDto.getItemId());
                 if (item.isPresent()) {
                     return ItemMapper.toDto(item.get());
                 }
             }
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+        return null;
+    }
+
+    @Override
+
+    public List<ItemDto> searchItems(String itemName, Long locationId) {
+        log.info("searching items by name: {}, locationId: {}", itemName, locationId);
+        List<ItemDto> itemDtos;
+        try {
+            if(StringUtils.isBlank(itemName)){
+                itemName=null;
+            }
+            if(Objects.nonNull(locationId) && StringUtils.isBlank(locationId.toString())){
+                locationId=null;
+            }
+            String username = SecurityUtil.getCurrentUsername();
+            Optional<UserDto> user = userService.findByUsername(username);
+            if (user.isPresent() && user.get().getRoles().equalsIgnoreCase("ADMIN")) {
+                itemDtos= itemDao.searchItems(itemName, locationId)
+                        .stream()
+                        .map(ItemMapper::toDto)
+                        .toList();
+            } else {
+                itemDtos= itemDao.searchItems(itemName, locationId)
+                        .stream()
+                        .filter(item -> item.getUserId().equals(user.get().getId()))
+                        .map(ItemMapper::toDto)
+                        .toList();
+            }
+            return itemDtos;
         } catch (Exception e) {
             log.error(e.getMessage());
         }
