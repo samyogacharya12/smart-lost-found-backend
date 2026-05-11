@@ -127,7 +127,7 @@ public class ItemDaoImpl implements ItemDao {
     }
 
     @Override
-    public List<Item> searchItems(String itemName, Long locationId) {
+    public List<Item> searchItems(String itemName, Long locationId, String itemType) {
         String sql = """
                     SELECT
                         i.item_id,
@@ -146,6 +146,7 @@ public class ItemDaoImpl implements ItemDao {
                     INNER JOIN users u ON u.user_id = i.user_id
                     WHERE (? IS NULL OR i.title LIKE ?)
                     AND (? IS NULL OR l.location_id = ?)
+                    AND (? IS NULL OR i.item_type = ?)
                 """;
         String likeSearchName=null;
         if(Objects.nonNull(itemName)){
@@ -157,13 +158,17 @@ public class ItemDaoImpl implements ItemDao {
                         likeSearchName,
                         likeSearchName,
                         locationId,
-                        locationId
+                        locationId,
+                        itemType,
+                        itemType
                 },
                 new int[] {
                         Types.VARCHAR,
                         Types.VARCHAR,
                         Types.BIGINT,
-                        Types.BIGINT
+                        Types.BIGINT,
+                        Types.VARCHAR,
+                        Types.VARCHAR
                 },
                 (rs, rowNum) -> {
                     Item item = new Item();

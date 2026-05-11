@@ -21,7 +21,7 @@ public interface ItemService {
 
     ItemDto updateStatus(ItemDto itemDto);
 
-    List<ItemDto> searchItems(String itemName, Long locationId);
+    List<ItemDto> searchItems(String itemName, Long locationId, String itemType);
 
     void deleteById(Long itemId);
 

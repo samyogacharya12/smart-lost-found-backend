@@ -145,20 +145,13 @@ public class ItemServiceImpl implements ItemService {
         log.info("Fetching items by type: {}", itemType);
         try {
             List<ItemDto> itemDtos;
-            String username=SecurityUtil.getCurrentUsername();
-            Optional<UserDto> user=userService.findByUsername(username);
-            if(user.isPresent()) {
-                if(user.get().getRoles().equalsIgnoreCase("ADMIN")){
-                    itemDtos= itemDao.findByItemType(itemType)
-                            .stream()
-                            .map(ItemMapper::toDto)
-                            .toList();
-                } else {
-                    itemDtos= itemDao.findByItemTypeAndUserId(itemType, user.get().getId())
-                            .stream()
-                            .map(ItemMapper::toDto)
-                            .toList();
-                }
+            String username = SecurityUtil.getCurrentUsername();
+            Optional<UserDto> user = userService.findByUsername(username);
+            if (user.isPresent()) {
+                itemDtos = itemDao.findByItemType(itemType)
+                        .stream()
+                        .map(ItemMapper::toDto)
+                        .toList();
                 return mapToDto(itemDtos);
             }
         } catch (Exception e) {
@@ -188,10 +181,11 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto updateStatus(ItemDto itemDto) {
-        log.info("Updating item status. Item id: {}, status: {}", itemDto.getItemId(), itemDto.getItemId());
+        log.info("Updating item status. Item id: {}, status: {}", itemDto.getItemId(),
+                itemDto.getItemId());
+        itemDao.findById(itemDto.getItemId())
+                .orElseThrow(() -> new RuntimeException("Item not found"));
         try {
-            itemDao.findById(itemDto.getItemId())
-                    .orElseThrow(() -> new RuntimeException("Item not found"));
 
             int response = itemDao.updateStatus(itemDto.getItemId(),
                     ItemStatus.valueOf(itemDto.getStatus()));
@@ -209,31 +203,23 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
 
-    public List<ItemDto> searchItems(String itemName, Long locationId) {
+    public List<ItemDto> searchItems(String itemName, Long locationId, String itemType) {
         log.info("searching items by name: {}, locationId: {}", itemName, locationId);
-        List<ItemDto> itemDtos;
         try {
+            if(StringUtils.isBlank(itemType)){
+                itemType=null;
+            }
+
             if(StringUtils.isBlank(itemName)){
                 itemName=null;
             }
             if(Objects.nonNull(locationId) && StringUtils.isBlank(locationId.toString())){
                 locationId=null;
             }
-            String username = SecurityUtil.getCurrentUsername();
-            Optional<UserDto> user = userService.findByUsername(username);
-            if (user.isPresent() && user.get().getRoles().equalsIgnoreCase("ADMIN")) {
-                itemDtos= itemDao.searchItems(itemName, locationId)
+                return itemDao.searchItems(itemName, locationId, itemType)
                         .stream()
                         .map(ItemMapper::toDto)
                         .toList();
-            } else {
-                itemDtos= itemDao.searchItems(itemName, locationId)
-                        .stream()
-                        .filter(item -> item.getUserId().equals(user.get().getId()))
-                        .map(ItemMapper::toDto)
-                        .toList();
-            }
-            return itemDtos;
         } catch (Exception e) {
             log.error(e.getMessage());
         }

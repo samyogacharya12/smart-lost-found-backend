@@ -196,7 +196,7 @@ public class ClaimServiceImpl implements ClaimService {
                  emailService.sendEmail(
                          email,
                          "Claim Approved",
-                         "Your claim has been approved. The item is marked as returned.",
+                         "Your claim has been approved successfully. Please visit the Heritage Hall with valid proof of ownership to collect your item.",
                                item.get().getTitle()
 
                  );
@@ -236,7 +236,7 @@ public class ClaimServiceImpl implements ClaimService {
             emailService.sendEmail(
                     email,
                     "Claim Rejected",
-                    "Your claim for the item has been rejected. Please contact support if needed.",
+                    "Your claim for the item has been rejected. For further assistance, please contact the staff at the Heritage Hall support desk..",
                     item.get().getTitle()
             );
             return ClaimMapper.toDto(claim);

@@ -35,7 +35,6 @@ public class ClaimController {
         return ResponseEntity.ok(claimService.findById(claimId));
     }
 
-    @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping
     public ResponseEntity<List<ClaimDto>> findAll() {
         return ResponseEntity.ok(claimService.findAll());

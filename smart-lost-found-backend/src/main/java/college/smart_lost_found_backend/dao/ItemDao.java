@@ -21,7 +21,7 @@ public interface ItemDao {
 
     List<Item> findByItemTypeAndUserId(String itemType, Long userId);
 
-    List<Item> searchItems(String itemName, Long locationId);
+    List<Item> searchItems(String itemName, Long locationId, String itemType);
 
     int update(Item item);
 

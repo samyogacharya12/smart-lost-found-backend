@@ -32,7 +32,8 @@ public class ItemController {
     public ResponseEntity<List<ItemDto>> searchItems(@RequestBody ItemDto itemDto) {
         log.info("searching item");
         return ResponseEntity.ok(itemService
-                .searchItems(itemDto.getTitle(), itemDto.getLocationId()));
+                .searchItems(itemDto.getTitle(), itemDto.getLocationId(),
+                        itemDto.getItemType()));
     }
 
 
@@ -65,7 +66,7 @@ public class ItemController {
     }
 
     @PreAuthorize("hasAuthority('ADMIN')")
-    @PatchMapping("/status")
+    @PutMapping("/status")
     public ResponseEntity<ItemDto> updateStatus(
             @RequestBody  ItemDto itemDto
     ) {
