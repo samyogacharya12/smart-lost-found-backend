@@ -2,17 +2,19 @@ package college.smart_lost_found_backend.service;
 
 import college.smart_lost_found_backend.dao.ItemDao;
 import college.smart_lost_found_backend.dao.ItemImageDao;
-import college.smart_lost_found_backend.dto.ClaimDto;
-import college.smart_lost_found_backend.dto.ItemDto;
-import college.smart_lost_found_backend.dto.ItemImageDto;
-import college.smart_lost_found_backend.dto.UserDto;
+import college.smart_lost_found_backend.dao.SystemDao;
+import college.smart_lost_found_backend.dto.*;
+import college.smart_lost_found_backend.enumconstant.ImageType;
 import college.smart_lost_found_backend.enumconstant.ItemStatus;
+import college.smart_lost_found_backend.enumconstant.ResponseStatus;
+import college.smart_lost_found_backend.exceptions.Invalid;
 import college.smart_lost_found_backend.mapper.ClaimMapper;
 import college.smart_lost_found_backend.mapper.ItemImageMapper;
 import college.smart_lost_found_backend.mapper.ItemMapper;
 import college.smart_lost_found_backend.model.Claim;
 import college.smart_lost_found_backend.model.Item;
 import college.smart_lost_found_backend.model.ItemImage;
+import college.smart_lost_found_backend.model.SystemImage;
 import college.smart_lost_found_backend.util.SecurityUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -46,14 +48,21 @@ public class ItemImageServiceImpl implements ItemImageService {
     private static final String UPLOAD_CLAIM_DIR = "uploads/claims/";
 
 
+    private final SystemDao systemDao;
+
+    private static final String UPLOAD_HOME_IMAGES = "uploads/home-images/";
+
+
     public ItemImageServiceImpl(ItemImageDao itemImageDao,
                                 ItemDao itemDao,
                                 UserService userService,
-                                ClaimService claimService) {
+                                ClaimService claimService,
+                                SystemDao systemDao) {
         this.itemImageDao = itemImageDao;
         this.itemDao = itemDao;
         this.userService = userService;
         this.claimService = claimService;
+        this.systemDao = systemDao;
     }
 
     @Override
@@ -115,6 +124,38 @@ public class ItemImageServiceImpl implements ItemImageService {
     }
 
     @Override
+    public RestResponse uploadSystemImage(MultipartFile file) {
+        log.info("uploadSystemImage");
+        RestResponse restResponse= RestResponse.builder().build();
+        if (file.isEmpty()) {
+            throw new Invalid("File is empty", file.getName());
+        }
+        try {
+            Path path = Paths.get(UPLOAD_HOME_IMAGES);
+            if (!Files.exists(path)) {
+                Files.createDirectories(path);
+            }
+            String originalFileName = file.getOriginalFilename();
+            String fileName = UUID.randomUUID() + "_" + originalFileName;
+            Path filePath = Paths.get(UPLOAD_HOME_IMAGES + fileName);
+            Files.write(filePath, file.getBytes());
+
+            SystemImage systemImage = SystemImage
+                    .builder()
+                    .imageName(fileName)
+                    .imagePath(filePath.toAbsolutePath().toString())
+                    .imageType(ImageType.CONTACT_PAGE)
+                    .build();
+            systemDao.save(systemImage);
+            restResponse.setDetail("uploaded successfully"+ systemImage.getImageName());
+            restResponse.setResponseStatus(ResponseStatus.SUCCESS);
+            return restResponse;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to upload image: " + e.getMessage());
+        }
+    }
+
+    @Override
     public List<ItemImageDto> getImagesByItemId(Long itemId) {
         log.info("getImagesByItemId");
         try {
@@ -137,6 +178,20 @@ public class ItemImageServiceImpl implements ItemImageService {
             if (imageDto.isPresent()) {
                 filePath = Paths.get(imageDto.get().getPath());
             }
+            return Files.readAllBytes(filePath);
+        } catch (Exception exception) {
+            log.error("error in download image: " + exception.getMessage());
+        }
+        return null;
+    }
+
+    @Override
+    public byte[] downloadSystemImage(Long systemId) {
+        log.info("downloadSystemImage");
+        try {
+            Path filePath;
+            SystemImage sytemImage = systemDao.findById(systemId);
+            filePath = Paths.get(sytemImage.getImagePath());
             return Files.readAllBytes(filePath);
         } catch (Exception exception) {
             log.error("error in download image: " + exception.getMessage());

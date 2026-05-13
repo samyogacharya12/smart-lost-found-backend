@@ -7,17 +7,15 @@ import college.smart_lost_found_backend.dto.ItemDto;
 import college.smart_lost_found_backend.dto.LocationDto;
 import college.smart_lost_found_backend.dto.UserDto;
 import college.smart_lost_found_backend.enumconstant.ItemStatus;
+import college.smart_lost_found_backend.enumconstant.ItemType;
 import college.smart_lost_found_backend.mapper.ItemMapper;
 import college.smart_lost_found_backend.model.Item;
 import college.smart_lost_found_backend.model.ItemImage;
-import college.smart_lost_found_backend.model.User;
 import college.smart_lost_found_backend.util.SecurityUtil;
 import io.micrometer.common.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.catalina.util.StringUtil;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -39,16 +37,51 @@ public class ItemServiceImpl implements ItemService {
 
     private final UserService userService;
 
+
+    private final EmailService emailService;
+
+    private final NotificationService notificationService;
+
+    private static  final String FOUND_REPORTED_EMAIL= """
+Dear User,
+
+Thank you for reporting a found item through the Smart Lost & Found System.
+
+The administration team has identified a possible match between the item you reported and a lost item claim submitted by another user.
+
+We appreciate your honesty and cooperation in helping return lost belongings to their rightful owner.
+
+Location:  Heritage Hall
+
+Thank you for contributing to the community.
+""".replace("\n", "<br>");
+
+    private static final String RETURNED_REPORTED_EMAIL = """
+               Your item has been marked as returned successfully.
+            
+                                 Thank you for using the Smart Lost & Found System.
+            
+                                 Location: Heritage Hall
+            
+            """;
+
+
+
+
     public ItemServiceImpl(ItemDao itemDao,
                            CategoryService categoryService,
                            LocationService locationService,
                            UserService userService,
-                           ItemImageDao itemImageDao) {
+                           ItemImageDao itemImageDao,
+                           EmailService emailService,
+                           NotificationService notificationService) {
         this.itemDao = itemDao;
         this.categoryService = categoryService;
         this.locationService = locationService;
         this.userService = userService;
         this.itemImageDao = itemImageDao;
+        this.emailService = emailService;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -181,17 +214,36 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto updateStatus(ItemDto itemDto) {
-        log.info("Updating item status. Item id: {}, status: {}", itemDto.getItemId(),
-                itemDto.getItemId());
-        itemDao.findById(itemDto.getItemId())
-                .orElseThrow(() -> new RuntimeException("Item not found"));
+        log.info("Updating item status. Item id: {}, status: {}", itemDto.getItemId(), itemDto.getItemId());
+        itemDao.findById(itemDto.getItemId()).orElseThrow(() -> new RuntimeException("Item not found"));
         try {
 
-            int response = itemDao.updateStatus(itemDto.getItemId(),
-                    ItemStatus.valueOf(itemDto.getStatus()));
+            int response = itemDao.updateStatus(itemDto.getItemId(), ItemStatus.valueOf(itemDto.getStatus()));
             if (response == 1) {
                 Optional<Item> item = itemDao.findById(itemDto.getItemId());
                 if (item.isPresent()) {
+                    UserDto userDto = userService.findByUserId(item.get().getUserId());
+                    item.get().setUserName(userDto.getUserName());
+                    if (item.get().getItemType().equals(ItemType.LOST) && item.get().getStatus().equals(ItemStatus.MATCHED)) {
+                        notificationService.sendNotification(userDto.getId(), item.get().getTitle(), "Your item request has been matched successfully. Please visit Heritage Hall with valid proof of ownership to collect your item.");
+
+                        emailService.sendEmail(userDto.getEmail(), "Item Matched", "Your item request has been matched successfully. Please visit Heritage Hall with valid proof of ownership to collect your item.", item.get().getTitle()
+
+                        );
+                    } else if (item.get().getItemType().equals(ItemType.FOUND) && item.get().getStatus().equals(ItemStatus.MATCHED)) {
+                        notificationService.sendNotification(userDto.getId(), item.get().getTitle(), FOUND_REPORTED_EMAIL);
+
+                        emailService.sendEmail(userDto.getEmail(), "Found Item Match Confirmation", FOUND_REPORTED_EMAIL, item.get().getTitle()
+
+                        );
+                    } else if (item.get().getStatus().equals(ItemStatus.RETURNED)) {
+
+                        notificationService.sendNotification(userDto.getId(), item.get().getTitle(), RETURNED_REPORTED_EMAIL);
+
+                        emailService.sendEmail(userDto.getEmail(), "Item Return Confirmation", RETURNED_REPORTED_EMAIL, item.get().getTitle());
+                    }
+
+
                     return ItemMapper.toDto(item.get());
                 }
             }

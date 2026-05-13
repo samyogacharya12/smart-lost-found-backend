@@ -45,7 +45,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable) // disable CSRF for APIs
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers( "/api/register","/api/authenticate", "/api/verify", "/item/images/download/**", "/item/claim/**").permitAll()
+                        .requestMatchers( "/api/register","/api/authenticate", "/api/verify", "/item/images/download/**", "/item/claim/**", "/item/system/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session ->

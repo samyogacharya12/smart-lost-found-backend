@@ -17,37 +17,38 @@ public class EmailServiceImpl implements EmailService {
         this.javaMailSender = javaMailSender;
     }
 
-    private String buildHtmlTemplate(String itemName, String messageBody) {
+    private String buildHtmlTemplate(String itemName, String messageBody, String phoneNumber) {
 
         return """
-        <html>
-        <body style="font-family: Arial, sans-serif; background-color: #f4f6f8; padding: 20px;">
-            
-            <div style="max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 10px;">
-                
-                <h2 style="color: #2c3e50;">Smart Lost & Found System</h2>
-                
-                <p>Hello,</p>
-                
-                <p>%s</p>
-                
-                <div style="margin: 20px 0; padding: 15px; background-color: #eef2f7; border-radius: 5px;">
-                    <strong>Item:</strong> %s
-                </div>
-                
-                <p>Please log in to the system for more details.</p>
-                
-                <hr>
-                
-                <p style="font-size: 12px; color: gray;">
-                    This is an automated email. Please do not reply.
-                </p>
-                
+    <html>
+    <body style="font-family: Arial, sans-serif; background-color: #f4f6f8; padding: 20px;">
+
+        <div style="max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 10px;">
+
+            <h2 style="color: #2c3e50;">Smart Lost & Found System</h2>
+
+            <p>Hello,</p>
+
+            <p>%s</p>
+
+            <div style="margin: 20px 0; padding: 15px; background-color: #eef2f7; border-radius: 5px;">
+                <p><strong>Item:</strong> %s</p>
+                <p><strong>Contact Phone:</strong> %s</p>
             </div>
-            
-        </body>
-        </html>
-        """.formatted(messageBody, itemName);
+
+            <p>Please log in to the system for more details.</p>
+
+            <hr>
+
+            <p style="font-size: 12px; color: gray;">
+                This is an automated email. Please do not reply.
+            </p>
+
+        </div>
+
+    </body>
+    </html>
+    """.formatted(messageBody, itemName, phoneNumber);
     }
 
     @Override
@@ -93,7 +94,7 @@ public class EmailServiceImpl implements EmailService {
             helper.setTo(to);
             helper.setSubject(subject);
 
-            String htmlContent = buildHtmlTemplate(itemName, body);
+            String htmlContent = buildHtmlTemplate(itemName, body, "3184970237");
 
             helper.setText(htmlContent, true); // true = HTML
 

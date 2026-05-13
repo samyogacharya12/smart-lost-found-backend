@@ -1,7 +1,6 @@
 package college.smart_lost_found_backend.dao;
 
 import college.smart_lost_found_backend.enumconstant.ItemStatus;
-import college.smart_lost_found_backend.enumconstant.ItemType;
 import college.smart_lost_found_backend.model.Item;
 
 import java.util.List;
