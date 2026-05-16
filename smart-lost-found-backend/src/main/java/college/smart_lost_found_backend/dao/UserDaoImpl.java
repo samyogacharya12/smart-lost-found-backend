@@ -29,14 +29,15 @@ public class UserDaoImpl implements UserDao {
         user.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
         user.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
         user.setEmailVerified(rs.getBoolean("email_verified"));
+        user.setAddress(rs.getString("address"));
         return user;
     };
 
     @Override
     public int save(User user) {
         String sql = """
-                INSERT INTO users (username,first_name, middle_name, last_name ,email, password, phone_number, role, email_verified, verification_token)
-                VALUES (?, ?,?, ?, ?, ?, ?,?,?,?)
+                INSERT INTO users (username,first_name, middle_name, last_name ,email, password, phone_number, role, email_verified, verification_token, address)
+                VALUES (?, ?,?, ?, ?, ?, ?,?,?,?, ?)
                 """;
 
         return jdbcTemplate.update(
@@ -50,8 +51,20 @@ public class UserDaoImpl implements UserDao {
                 user.getPhoneNumber(),
                 user.getRole(),
                 user.getEmailVerified(),
-                user.getVerificationToken()
+                user.getVerificationToken(),
+                user.getAddress()
         );
+    }
+
+    @Override
+    public void updateVerificationToken(Long userId, String token, int expiry) {
+        String sql = """
+                    UPDATE users
+                    SET verification_token = ?, token_expiry = ?
+                    WHERE user_id = ?
+                """;
+
+        jdbcTemplate.update(sql, token, expiry, userId);
     }
 
     @Override
@@ -91,10 +104,23 @@ public class UserDaoImpl implements UserDao {
     }
 
     @Override
+    public void clearVerificationToken(String encodedPassword,Long userId) {
+        String sql = """
+                    UPDATE users
+                    SET verification_token = NULL,
+                        token_expiry = NULL,
+                        password = ?
+                    WHERE user_id = ?
+                """;
+
+        jdbcTemplate.update(sql, encodedPassword, userId);
+    }
+
+    @Override
     public int update(User user) {
         String sql = """
                 UPDATE users
-                SET username = ?, first_name=?, middle_name=?, last_name=?, phone_number = ?, role = ?
+                SET username = ?, first_name=?, middle_name=?, last_name=?, phone_number = ?, role = ?, address=?
                 WHERE user_id = ?
                 """;
 
@@ -106,6 +132,7 @@ public class UserDaoImpl implements UserDao {
                 user.getLastName(),
                 user.getPhoneNumber(),
                 user.getRole(),
+                user.getAddress(),
                 user.getUserId()
         );
     }

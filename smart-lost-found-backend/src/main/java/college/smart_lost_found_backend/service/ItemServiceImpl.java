@@ -16,6 +16,7 @@ import io.micrometer.common.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -25,6 +26,7 @@ import java.util.Optional;
 
 @Service
 @Slf4j
+@Transactional
 public class ItemServiceImpl implements ItemService {
 
     private final ItemDao itemDao;
@@ -218,13 +220,16 @@ Thank you for contributing to the community.
         itemDao.findById(itemDto.getItemId()).orElseThrow(() -> new RuntimeException("Item not found"));
         try {
 
-            int response = itemDao.updateStatus(itemDto.getItemId(), ItemStatus.valueOf(itemDto.getStatus()));
+            int response = itemDao
+                    .updateStatusUsingProcedure(itemDto.getItemId(),
+                            ItemStatus.valueOf(itemDto.getStatus()));
             if (response == 1) {
                 Optional<Item> item = itemDao.findById(itemDto.getItemId());
                 if (item.isPresent()) {
                     UserDto userDto = userService.findByUserId(item.get().getUserId());
                     item.get().setUserName(userDto.getUserName());
-                    if (item.get().getItemType().equals(ItemType.LOST) && item.get().getStatus().equals(ItemStatus.MATCHED)) {
+                    if (item.get().getItemType().equals(ItemType.LOST) && item.get().getStatus()
+                            .equals(ItemStatus.MATCHED)) {
                         notificationService.sendNotification(userDto.getId(), item.get().getTitle(), "Your item request has been matched successfully. Please visit Heritage Hall with valid proof of ownership to collect your item.");
 
                         emailService.sendEmail(userDto.getEmail(), "Item Matched", "Your item request has been matched successfully. Please visit Heritage Hall with valid proof of ownership to collect your item.", item.get().getTitle()

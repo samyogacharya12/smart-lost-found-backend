@@ -21,6 +21,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -91,6 +92,68 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         restResponse.setMessage("User Could not be saved");
         restResponse.setStatus(HttpStatus.ALREADY_REPORTED.toString());
         return restResponse;
+    }
+
+    @Override
+    public RestResponse update(UserDto userDto) {
+        RestResponse restResponse = RestResponse.builder().build();
+        try{
+             userDao.update(userMapper.toEntity(userDto));
+            restResponse.setMessage("User has been saved");
+            restResponse.setStatus(HttpStatus.OK.toString());
+            return restResponse;
+        } catch (Exception exception){
+            log.error("UserServiceImpl update userDto {}",exception);
+        }
+        restResponse.setMessage("User Could not be saved");
+        restResponse.setStatus(HttpStatus.ALREADY_REPORTED.toString());
+        return restResponse;
+    }
+
+    @Override
+    public void forgotPassword(String email) {
+        Optional<User> user = userDao.findByEmail(email);
+
+        String token = UUID.randomUUID().toString();
+        LocalDateTime expiry = LocalDateTime.now().plusMinutes(30);
+        if(user.isPresent()){
+            userDao.updateVerificationToken(user.get().getUserId(),
+                    token, expiry.getMinute());
+
+            String resetLink = "http://localhost:4200/reset-password?token=" + token;
+
+            emailService.sendResetPasswordEmail(user.get().getEmail(), resetLink);
+        }
+    }
+
+    @Override
+    public RestResponse resetPassword(String token, String newPassword) {
+        RestResponse restResponse = RestResponse.builder().build();
+        try {
+            Optional<User> user = userDao.findByVerificationToken(token);
+
+            if (user.isEmpty()) {
+                throw new RuntimeException("Invalid token");
+            }
+
+            if (user.get().getTokenExpiry().isBefore(LocalDateTime.now())) {
+                throw new RuntimeException("Token expired");
+            }
+
+            String encodedPassword = passwordEncoder.encode(newPassword);
+            user.get().setPassword(encodedPassword);
+            userDao.update(user.get());
+
+            userDao.clearVerificationToken(encodedPassword, user.get().getUserId());
+            restResponse.setMessage("your password has been updated");
+            restResponse.setResponseStatus(ResponseStatus.SUCCESS);
+            return restResponse;
+        } catch (Exception e) {
+            log.error("UserServiceImpl resetPassword userDto {}",e);
+            restResponse.setMessage("password reset failed");
+            restResponse.setResponseStatus(ResponseStatus.INTERNAL_SERVER_ERROR);
+            return restResponse;
+        }
     }
 
     @Override

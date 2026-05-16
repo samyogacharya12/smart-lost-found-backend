@@ -16,10 +16,11 @@ public class User {
     private String password;
     private String phoneNumber;
     private String role;
+    private String address;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Boolean emailVerified;
     private String verificationToken;
-
+    private LocalDateTime tokenExpiry;
 
 }

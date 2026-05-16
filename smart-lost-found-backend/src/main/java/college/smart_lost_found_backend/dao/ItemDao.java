@@ -10,6 +10,8 @@ public interface ItemDao {
 
     int save(Item item);
 
+    int updateStatusUsingProcedure(Long itemId, ItemStatus status);
+
     Optional<Item> findById(Long itemId);
 
     List<Item> findAll();

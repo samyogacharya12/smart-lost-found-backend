@@ -202,9 +202,6 @@ public class ClaimServiceImpl implements ClaimService {
                  );
 
              }
-            // Once approved, item is returned
-            itemDao.updateStatus(claim.getItemId(), ItemStatus.RETURNED);
-
             claim = claimDao.findById(claimId)
                     .orElseThrow(() -> new RuntimeException("Claim not found"));
             return ClaimMapper.toDto(claim);

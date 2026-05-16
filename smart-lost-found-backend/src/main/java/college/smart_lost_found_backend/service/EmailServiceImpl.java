@@ -104,4 +104,32 @@ public class EmailServiceImpl implements EmailService {
             log.error("Error sending email", e);
         }
     }
+
+    @Override
+    public void sendResetPasswordEmail(String to, String resetLink) {
+        log.info("Sending email to " + to);
+        try {
+            String subject = "Reset Your Password";
+
+            String body = """
+                    <h3>Password Reset Request</h3>
+                    <p>Click the link below to reset your password:</p>
+                    <a href="%s">Reset Password</a>
+                    <p>This link will expire in 30 minutes.</p>
+                    """.formatted(resetLink);
+
+            MimeMessage message = javaMailSender.createMimeMessage();
+
+            MimeMessageHelper helper =
+                    new MimeMessageHelper(message, true);
+
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(body, true); // true = HTML
+
+            javaMailSender.send(message);
+        } catch (Exception e) {
+            log.error("Error sending email", e);
+        }
+    }
 }

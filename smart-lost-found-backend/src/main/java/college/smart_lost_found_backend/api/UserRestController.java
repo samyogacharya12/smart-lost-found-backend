@@ -2,6 +2,7 @@ package college.smart_lost_found_backend.api;
 
 import college.smart_lost_found_backend.dto.RestResponse;
 import college.smart_lost_found_backend.dto.UserDto;
+import college.smart_lost_found_backend.enumconstant.ResponseStatus;
 import college.smart_lost_found_backend.service.AuthenticationService;
 import college.smart_lost_found_backend.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +32,12 @@ public class UserRestController {
         return new ResponseEntity<>(userService.save(userDto), HttpStatus.OK);
     }
 
+    @PutMapping("/users")
+    public ResponseEntity<RestResponse> update(@RequestBody UserDto userDto) {
+        RestResponse restResponse= userService.update(userDto);
+        return ResponseEntity.ok(restResponse);
+    }
+
     @PostMapping("/authenticate")
     public ResponseEntity<UserDto> authenticateAndGetToken(@RequestBody UserDto authRequest) {
         UserDto userDto = authenticationService.login(authRequest);
@@ -49,6 +56,28 @@ public class UserRestController {
         RestResponse restResponse= userService.findAll();
         return ResponseEntity.ok(restResponse);
     }
+
+    @PostMapping("/users/forgot-password")
+    public ResponseEntity<RestResponse> forgotPassword(
+            @RequestParam String email) {
+
+        RestResponse restResponse= RestResponse.builder().build();
+        userService.forgotPassword(email);
+        restResponse.setMessage("Reset password link sent to your email");
+        restResponse.setResponseStatus(ResponseStatus.SUCCESS);
+        return ResponseEntity.ok(
+                restResponse);
+    }
+
+    @PostMapping("/users/reset-password")
+    public ResponseEntity<String> resetPassword(
+            @RequestBody UserDto userDto) {
+        userService.resetPassword(userDto.getEmail(), userDto.getPassword());
+
+        return ResponseEntity.ok(
+                "Reset password link sent to your email");
+    }
+
 
 
 }

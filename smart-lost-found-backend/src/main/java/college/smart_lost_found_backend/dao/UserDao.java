@@ -9,6 +9,8 @@ public interface UserDao {
 
     int save(User user);
 
+    void updateVerificationToken(Long userId, String token, int expiry);
+
     Optional<User> findById(Long userId);
 
     Optional<User> findByName(String username);
@@ -18,6 +20,8 @@ public interface UserDao {
     Optional<User> findByEmail(String email);
 
     List<User> findAll();
+
+     void clearVerificationToken(String encodedPassword,Long userId);
 
     int update(User user);
 

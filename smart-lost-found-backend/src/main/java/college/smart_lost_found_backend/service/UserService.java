@@ -10,6 +10,12 @@ public interface UserService {
 
     RestResponse save(UserDto userDto);
 
+    RestResponse update(UserDto userDto);
+
+    void forgotPassword(String email);
+
+    RestResponse resetPassword(String token, String newPassword);
+
     RestResponse verifyEmail(String token);
 
 

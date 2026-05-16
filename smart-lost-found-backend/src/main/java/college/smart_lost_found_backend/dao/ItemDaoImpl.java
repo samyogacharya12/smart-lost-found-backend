@@ -89,6 +89,16 @@ public class ItemDaoImpl implements ItemDao {
     }
 
     @Override
+    public int updateStatusUsingProcedure(Long itemId, ItemStatus status) {
+        String sql = "CALL update_item_status(?, ?)";
+
+        return jdbcTemplate.update(
+                sql,
+                itemId,
+                status.name()
+        );    }
+
+    @Override
     public Optional<Item> findById(Long itemId) {
         String sql = "SELECT * FROM items WHERE item_id = ?";
 

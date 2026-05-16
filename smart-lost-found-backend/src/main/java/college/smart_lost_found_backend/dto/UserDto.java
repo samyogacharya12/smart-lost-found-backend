@@ -31,7 +31,8 @@ public class UserDto extends BaseDto {
                    Boolean emailVerified,
                    String phoneNumber,
                    String firstName,
-                   String lastName) {
+                   String lastName,
+                   String address) {
         this.id=id;
         this.userName=userName;
         this.email=email;
@@ -40,5 +41,6 @@ public class UserDto extends BaseDto {
         this.phoneNumber=phoneNumber;
         this.firstName=firstName;
         this.lastName=lastName;
+        this.address=address;
     }
 }

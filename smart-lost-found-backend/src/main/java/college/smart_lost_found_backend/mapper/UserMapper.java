@@ -22,7 +22,8 @@ public class UserMapper {
                 user.getEmailVerified(),
                 user.getPhoneNumber(),
                 user.getFirstName(),
-                user.getLastName()
+                user.getLastName(),
+                user.getAddress()
         );
     }
 
@@ -43,6 +44,7 @@ public class UserMapper {
         user.setPassword(dto.getPassword());
         user.setEmailVerified(dto.getEmailVerified());
         user.setVerificationToken(dto.getVerificationToken());
+        user.setAddress(dto.getAddress());
         return user;
     }
 }
