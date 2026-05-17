@@ -24,18 +24,17 @@ public class ClaimController {
 
 
 
-    @PostMapping
-    public ResponseEntity<ClaimDto> save(@RequestBody ClaimDto claimDto) {
-        log.info("Creating claim");
-        return ResponseEntity.ok(claimService.save(claimDto));
-    }
+//    @PostMapping
+//    public ResponseEntity<ClaimDto> save(@RequestBody ClaimDto claimDto) {
+//        log.info("Creating claim");
+//        return ResponseEntity.ok(claimService.save(claimDto));
+//    }
 
     @GetMapping("/{claimId}")
     public ResponseEntity<ClaimDto> findById(@PathVariable Long claimId) {
         return ResponseEntity.ok(claimService.findById(claimId));
     }
 
-    @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping
     public ResponseEntity<List<ClaimDto>> findAll() {
         return ResponseEntity.ok(claimService.findAll());
@@ -46,13 +45,13 @@ public class ClaimController {
         return ResponseEntity.ok(claimService.findByItemId(itemId));
     }
 
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<ClaimDto>> findByUserId(@PathVariable Long userId) {
-        return ResponseEntity.ok(claimService.findByUserId(userId));
+    @GetMapping("/user")
+    public ResponseEntity<List<ClaimDto>> findByUserId() {
+        return ResponseEntity.ok(claimService.findByUserId());
     }
 
     @PreAuthorize("hasAuthority('ADMIN')")
-    @PatchMapping("/{claimId}/approve")
+    @PutMapping("/{claimId}/approve")
     public ResponseEntity<RestResponse> approveClaim(@PathVariable Long claimId) {
          claimService.approveClaim(claimId);
         RestResponse restResponse=new RestResponse();
@@ -61,7 +60,7 @@ public class ClaimController {
     }
 
     @PreAuthorize("hasAuthority('ADMIN')")
-    @PatchMapping("/{claimId}/reject")
+    @PutMapping("/{claimId}/reject")
     public ResponseEntity<RestResponse> rejectClaim(@PathVariable Long claimId) {
         claimService.rejectClaim(claimId);
         RestResponse restResponse=new RestResponse();

@@ -5,6 +5,7 @@ import college.smart_lost_found_backend.service.UserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -41,9 +42,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .csrf(csrf -> csrf.disable()) // disable CSRF for APIs
+                .csrf(AbstractHttpConfigurer::disable) // disable CSRF for APIs
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers( "/api/users","/api/authenticate").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers( "/api/register","/api/auth/forgot-password","/api/auth/reset-password","/api/authenticate", "/api/verify", "/item/images/download/**", "/item/claim/**", "/item/system/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session ->

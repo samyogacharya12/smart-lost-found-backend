@@ -9,6 +9,8 @@ public class ItemImageDto {
 
     private Long itemId;
 
-    private String imageUrl;
+    private Long claimId;
+
+    private String path;
 
 }

@@ -9,7 +9,11 @@ public class ClaimDto implements Serializable {
 
     private Long claimId;
     private Long itemId;
+    private String itemName;
+    private Long imageId;
     private Long userId;
+    private String userName;
     private String claimMessage;
     private String status;
+    private String imageUrl;
 }

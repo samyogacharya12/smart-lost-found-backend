@@ -10,6 +10,8 @@ public interface ItemDao {
 
     int save(Item item);
 
+    int updateStatusUsingProcedure(Long itemId, ItemStatus status);
+
     Optional<Item> findById(Long itemId);
 
     List<Item> findAll();
@@ -17,6 +19,10 @@ public interface ItemDao {
     List<Item> findByUserId(Long userId);
 
     List<Item> findByItemType(String itemType);
+
+    List<Item> findByItemTypeAndUserId(String itemType, Long userId);
+
+    List<Item> searchItems(String itemName, Long locationId, String itemType);
 
     int update(Item item);
 

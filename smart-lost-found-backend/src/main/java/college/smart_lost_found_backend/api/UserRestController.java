@@ -1,15 +1,14 @@
 package college.smart_lost_found_backend.api;
 
+import college.smart_lost_found_backend.dto.RestResponse;
 import college.smart_lost_found_backend.dto.UserDto;
+import college.smart_lost_found_backend.enumconstant.ResponseStatus;
 import college.smart_lost_found_backend.service.AuthenticationService;
 import college.smart_lost_found_backend.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api")
@@ -18,20 +17,25 @@ public class UserRestController {
 
     private final UserService userService;
 
-     private final AuthenticationService authenticationService;
-
+    private final AuthenticationService authenticationService;
 
 
     public UserRestController(UserService userService,
-                               AuthenticationService authenticationService) {
+                              AuthenticationService authenticationService) {
         this.userService = userService;
         this.authenticationService = authenticationService;
     }
 
-    @PostMapping("/users")
-    public ResponseEntity<String> save(@RequestBody UserDto userDto) {
-      log.info("UserRestController save userDto ");
-      return new ResponseEntity<>(userService.save(userDto), HttpStatus.OK);
+    @PostMapping("/register")
+    public ResponseEntity<RestResponse> save(@RequestBody UserDto userDto) {
+        log.info("UserRestController save userDto ");
+        return new ResponseEntity<>(userService.save(userDto), HttpStatus.OK);
+    }
+
+    @PutMapping("/users")
+    public ResponseEntity<RestResponse> update(@RequestBody UserDto userDto) {
+        RestResponse restResponse= userService.update(userDto);
+        return ResponseEntity.ok(restResponse);
     }
 
     @PostMapping("/authenticate")
@@ -40,6 +44,40 @@ public class UserRestController {
         log.info("UserRestController authenticate userDto ");
         return new ResponseEntity<>(userDto, HttpStatus.OK);
     }
+
+    @GetMapping("/verify")
+    public ResponseEntity<RestResponse> verifyEmail(@RequestParam String token) {
+       RestResponse restResponse= userService.verifyEmail(token);
+        return ResponseEntity.ok(restResponse);
+    }
+
+    @GetMapping("/users")
+    public ResponseEntity<RestResponse> getAll() {
+        RestResponse restResponse= userService.findAll();
+        return ResponseEntity.ok(restResponse);
+    }
+
+    @PostMapping("/users/forgot-password")
+    public ResponseEntity<RestResponse> forgotPassword(
+            @RequestParam String email) {
+
+        RestResponse restResponse= RestResponse.builder().build();
+        userService.forgotPassword(email);
+        restResponse.setMessage("Reset password link sent to your email");
+        restResponse.setResponseStatus(ResponseStatus.SUCCESS);
+        return ResponseEntity.ok(
+                restResponse);
+    }
+
+    @PostMapping("/users/reset-password")
+    public ResponseEntity<String> resetPassword(
+            @RequestBody UserDto userDto) {
+        userService.resetPassword(userDto.getEmail(), userDto.getPassword());
+
+        return ResponseEntity.ok(
+                "Reset password link sent to your email");
+    }
+
 
 
 }

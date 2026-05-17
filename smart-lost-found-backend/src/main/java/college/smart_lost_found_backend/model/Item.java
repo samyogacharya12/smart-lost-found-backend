@@ -13,8 +13,11 @@ public class Item implements Serializable {
 
     private Long itemId;
     private Long userId;
+    private String userName;
+    private Long imageId;
     private Long categoryId;
     private Long locationId;
+    private String locationName;
     private String title;
     private String description;
 

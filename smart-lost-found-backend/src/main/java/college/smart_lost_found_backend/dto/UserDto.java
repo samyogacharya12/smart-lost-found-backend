@@ -21,28 +21,26 @@ public class UserDto extends BaseDto {
     private String firstName;
     private String lastName;
     private String password;
+    private Boolean emailVerified;
+    private String verificationToken;
 
     public UserDto(Long id,
                    String userName,
                    String email,
-                   String roles) {
+                   String roles,
+                   Boolean emailVerified,
+                   String phoneNumber,
+                   String firstName,
+                   String lastName,
+                   String address) {
         this.id=id;
         this.userName=userName;
         this.email=email;
         this.roles=roles;
-    }
-
-    public UserDto(String firstName,
-                   String lastName,
-                   String address,
-                   String phoneNumber,
-                   Long userId,
-                   String userName) {
+        this.emailVerified=emailVerified;
+        this.phoneNumber=phoneNumber;
         this.firstName=firstName;
         this.lastName=lastName;
         this.address=address;
-        this.phoneNumber=phoneNumber;
-        this.id=userId;
-        this.userName=userName;
     }
 }

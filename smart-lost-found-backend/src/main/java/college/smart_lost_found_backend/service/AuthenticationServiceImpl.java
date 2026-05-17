@@ -30,9 +30,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         Authentication authenticate = authenticationManager.authenticate(new
                 UsernamePasswordAuthenticationToken
                 (userDto.getUserName(), userDto.getPassword()));
-        if (authenticate.isAuthenticated()) {
+        Optional<UserDto> findUser=userService.findByUsername(userDto.getUserName());
+        if (authenticate.isAuthenticated() && findUser.isPresent() &&
+                findUser.get().getEmailVerified()) {
             String token= jwtService.generateToken(userDto.getUserName());
-            Optional<UserDto> findUser=userService.findByUsername(userDto.getUserName());
             findUser.ifPresent(dto -> userDto.setRoles(dto.getRoles()));
             userDto.setPassword(null);
             userDto.setUserName(null);

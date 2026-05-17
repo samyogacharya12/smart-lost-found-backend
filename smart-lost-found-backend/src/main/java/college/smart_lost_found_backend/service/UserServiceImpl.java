@@ -1,12 +1,16 @@
 package college.smart_lost_found_backend.service;
 
 import college.smart_lost_found_backend.dao.UserDao;
+import college.smart_lost_found_backend.dto.RestResponse;
 import college.smart_lost_found_backend.dto.UserDto;
 import college.smart_lost_found_backend.dto.UserInfoDetails;
+import college.smart_lost_found_backend.enumconstant.ResponseStatus;
+import college.smart_lost_found_backend.exceptions.Invalid;
 import college.smart_lost_found_backend.mapper.UserMapper;
 import college.smart_lost_found_backend.model.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -17,18 +21,23 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 public class UserServiceImpl implements UserService, UserDetailsService {
 
 
-     @Autowired
-     private UserDao userDao;
+    @Autowired
+    private UserDao userDao;
 
-     @Autowired
-     private UserMapper userMapper;
+    @Autowired
+    private UserMapper userMapper;
 
 
     @Autowired
@@ -38,15 +47,164 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     private PasswordEncoder passwordEncoder;
 
 
+    @Autowired
+    private EmailService emailService;
+
     @Override
-    public String save(UserDto userDto) {
+    public RestResponse save(UserDto userDto) {
         log.info("UserServiceImpl save userDto ");
-        userDto.setPassword(passwordEncoder.encode(userDto.getPassword()));
-        int value=userDao.save(userMapper.toEntity(userDto));
-        if(value>0){
-            return "user saved successfully";
+        RestResponse restResponse = RestResponse.builder().build();
+        Optional<User> optionalUser = this.userDao.findByName(userDto.getUserName());
+        if (optionalUser.isPresent()) {
+            throw new Invalid("Sorry UserName already exist", optionalUser);
         }
-        return "user could not be saved";
+        Optional<User> userOptional = this.userDao.findByEmail(userDto.getEmail());
+        if (userOptional.isPresent() && Objects.nonNull(userOptional.get().getUserId())) {
+            throw new Invalid("Sorry Email already exist", userOptional);
+        }
+        try {
+            userDto.setPassword(passwordEncoder.encode(userDto.getPassword()));
+            userDto.setVerificationToken(UUID.randomUUID().toString());
+            int value = userDao.save(userMapper.toEntity(userDto));
+            String verificationLink =
+                    "http://localhost:8080/api/verify?token=" + userDto.getVerificationToken();
+
+            emailService.sendHtmlEmail(
+                    userDto.getEmail(),
+                    "Verify Your Email - Smart Lost & Found",
+                    "Welcome to Smart Lost & Found",
+                    """
+                            Thank you for registering. Please verify your email using the link below:
+                            <br><br>
+                            <a href="%s">Verify Email</a>
+                            """.formatted(verificationLink)
+            );
+            if (value > 0) {
+                restResponse = RestResponse.builder().build();
+                restResponse.setMessage("user " + userDto.getUserName() + "saved successfully");
+                restResponse.setResponseStatus(RestResponse.builder().build().getResponseStatus());
+                restResponse.setStatus(HttpStatus.ACCEPTED.toString());
+                return restResponse;
+            }
+        } catch (Exception e) {
+            log.error("UserServiceImpl save userDto {}", e);
+        }
+        restResponse.setMessage("User Could not be saved");
+        restResponse.setStatus(HttpStatus.ALREADY_REPORTED.toString());
+        return restResponse;
+    }
+
+    @Override
+    public RestResponse update(UserDto userDto) {
+        RestResponse restResponse = RestResponse.builder().build();
+        try{
+             userDao.update(userMapper.toEntity(userDto));
+            restResponse.setMessage("User has been saved");
+            restResponse.setStatus(HttpStatus.OK.toString());
+            return restResponse;
+        } catch (Exception exception){
+            log.error("UserServiceImpl update userDto {}",exception);
+        }
+        restResponse.setMessage("User Could not be saved");
+        restResponse.setStatus(HttpStatus.ALREADY_REPORTED.toString());
+        return restResponse;
+    }
+
+    @Override
+    public void forgotPassword(String email) {
+        Optional<User> user = userDao.findByEmail(email);
+
+        String token = UUID.randomUUID().toString();
+        LocalDateTime expiry = LocalDateTime.now().plusMinutes(30);
+        if(user.isPresent()){
+            userDao.updateVerificationToken(user.get().getUserId(),
+                    token, expiry.getMinute());
+
+            String resetLink = "http://localhost:4200/reset-password?token=" + token;
+
+            emailService.sendResetPasswordEmail(user.get().getEmail(), resetLink);
+        }
+    }
+
+    @Override
+    public RestResponse resetPassword(String token, String newPassword) {
+        RestResponse restResponse = RestResponse.builder().build();
+        try {
+            Optional<User> user = userDao.findByVerificationToken(token);
+
+            if (user.isEmpty()) {
+                throw new RuntimeException("Invalid token");
+            }
+
+            if (user.get().getTokenExpiry().isBefore(LocalDateTime.now())) {
+                throw new RuntimeException("Token expired");
+            }
+
+            String encodedPassword = passwordEncoder.encode(newPassword);
+            user.get().setPassword(encodedPassword);
+            userDao.update(user.get());
+
+            userDao.clearVerificationToken(encodedPassword, user.get().getUserId());
+            restResponse.setMessage("your password has been updated");
+            restResponse.setResponseStatus(ResponseStatus.SUCCESS);
+            return restResponse;
+        } catch (Exception e) {
+            log.error("UserServiceImpl resetPassword userDto {}",e);
+            restResponse.setMessage("password reset failed");
+            restResponse.setResponseStatus(ResponseStatus.INTERNAL_SERVER_ERROR);
+            return restResponse;
+        }
+    }
+
+    @Override
+    public RestResponse verifyEmail(String token) {
+        log.info("UserServiceImpl verifyEmail token ");
+        RestResponse restResponse = RestResponse.builder().build();
+        try {
+            User user = userDao.findByVerificationToken(token)
+                    .orElseThrow(() -> new RuntimeException("Invalid verification token"));
+
+            userDao.verifyEmail(user.getUserId());
+            restResponse.setMessage("Email verified successfully");
+            restResponse.setResponseStatus(RestResponse.builder().build().getResponseStatus());
+            restResponse.setStatus(HttpStatus.ACCEPTED.toString());
+            return restResponse;
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+        restResponse.setMessage("Email did not got verified");
+        restResponse.setStatus(HttpStatus.ALREADY_REPORTED.toString());
+        return restResponse;
+    }
+
+    @Override
+    public RestResponse findAll() {
+        log.info("UserServiceImpl findAll");
+        RestResponse restResponse = RestResponse.builder().build();
+        try {
+            List<UserDto> userDtoList= userDao.findAll()
+                    .stream().map(UserMapper::toDto)
+                    .toList();
+            restResponse.setDetail(userDtoList);
+            restResponse.setResponseStatus(ResponseStatus.SUCCESS);
+            restResponse.setStatus(HttpStatus.ACCEPTED.toString());
+            return restResponse;
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+        return RestResponse.builder().build();
+    }
+
+    @Override
+    public UserDto findByUserId(Long userId) {
+        log.info("UserServiceImpl findByUserId {}", userId);
+        try {
+            return userDao.findById(userId).stream().map(UserMapper::toDto)
+                    .findFirst().orElse(null);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+        return null;
     }
 
 

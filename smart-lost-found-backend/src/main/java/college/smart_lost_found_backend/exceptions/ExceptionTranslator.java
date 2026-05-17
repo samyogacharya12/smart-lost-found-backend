@@ -11,12 +11,14 @@ import org.springframework.security.authentication.InsufficientAuthenticationExc
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
+@ControllerAdvice
 public class ExceptionTranslator {
 
     @ExceptionHandler(InternalAuthenticationServiceException.class)
@@ -58,6 +60,12 @@ public class ExceptionTranslator {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<RestResponse> exceptionHandler() {
         return new ResponseEntity<>(ResponseUtil.getInternalServerErrorResponse(ErrorConstants.DEFAULT_INTERNAL_SERVER_ERROR_MESSAGE), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+
+    @ExceptionHandler(Invalid.class)
+    public ResponseEntity<RestResponse> invalid(Invalid ex) {
+        return new ResponseEntity<>(ResponseUtil.getBadRequestResponse(ex.getMessage(), ex.getDetail()), HttpStatus.BAD_REQUEST);
     }
 
 }
