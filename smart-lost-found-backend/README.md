@@ -1,8 +1,8 @@
-# 📦Smart Campus Lost & Found Management System – Backend
+# 📦Smart Lost & Found Management System – Backend
 
 ## 📖 Overview
 
-The **Campus Lost & Found Management System (Backend)** is a Spring Boot-based RESTful API designed to manage lost and found items within a campus. It allows users to report lost items, submit found items, and track item status efficiently.
+The **Smart Lost & Found Management System (Backend)** is a Spring Boot-based RESTful API designed to manage lost and found items within a campus. It allows users to report lost items, submit found items, and track item status efficiently.
 
 ---
 
